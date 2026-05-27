@@ -1,0 +1,22 @@
+{
+  "source_id": "P2-S05",
+  "title": "TiO2-modified g-C3N4 nanocomposite for photocatalytic degradation of RhB and MB",
+  "doi_or_url": "10.1016/j.heliyon.2022.e11065",
+  "landing_url": "https://pmc.ncbi.nlm.nih.gov/",
+  "access_date": "2026-05-27",
+  "download_date": "2026-05-27",
+  "license_or_terms": "open/verify at source",
+  "download_mode": "auto_pmc",
+  "priority": "core",
+  "practice3_role": "PDF/article",
+  "metadata_warnings": [],
+  "files": [
+    {
+      "local_path": "inputs/raw_sources/P2-S05/article.pdf",
+      "file_type": "article_pdf",
+      "download_status": "manual_required",
+      "source_url": "",
+      "notes": "Network disabled for acquisition run."
+    }
+  ]
+}

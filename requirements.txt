@@ -1,0 +1,17 @@
+pandas
+numpy
+pydantic
+python-dotenv
+requests
+beautifulsoup4
+lxml
+pdfplumber
+pymupdf
+camelot-py[cv]
+tabula-py
+python-docx
+openpyxl
+rapidfuzz
+regex
+tqdm
+matplotlib

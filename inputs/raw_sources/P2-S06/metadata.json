@@ -1,0 +1,24 @@
+{
+  "source_id": "P2-S06",
+  "title": "Photocatalytic degradation of Rhodamine B using ZnO/Ag nanowire nanocomposite films",
+  "doi_or_url": "verify DOI/source metadata before processing",
+  "landing_url": "https://royalsocietypublishing.org/",
+  "access_date": "2026-05-27",
+  "download_date": "2026-05-27",
+  "license_or_terms": "open/verify at source",
+  "download_mode": "blocked_or_verify",
+  "priority": "core",
+  "practice3_role": "PDF/article",
+  "metadata_warnings": [
+    "DOI/source metadata requires manual verification before extraction."
+  ],
+  "files": [
+    {
+      "local_path": "inputs/raw_sources/P2-S06/article.pdf",
+      "file_type": "article_pdf",
+      "download_status": "manual_required",
+      "source_url": "",
+      "notes": "Metadata verification required."
+    }
+  ]
+}

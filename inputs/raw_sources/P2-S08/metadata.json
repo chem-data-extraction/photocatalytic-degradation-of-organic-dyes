@@ -1,0 +1,22 @@
+{
+  "source_id": "P2-S08",
+  "title": "Photodegradation of Rhodamine B and Phenol Using TiO2/SiO2 Composite Nanoparticles",
+  "doi_or_url": "10.3390/w15152773",
+  "landing_url": "https://www.mdpi.com/2073-4441/15/15/2773",
+  "access_date": "2026-05-27",
+  "download_date": "2026-05-27",
+  "license_or_terms": "open/verify at source",
+  "download_mode": "auto_html_then_pdf_discovery",
+  "priority": "core",
+  "practice3_role": "HTML/PDF article",
+  "metadata_warnings": [],
+  "files": [
+    {
+      "local_path": "inputs/raw_sources/P2-S08/article.pdf",
+      "file_type": "article_pdf",
+      "download_status": "manual_required",
+      "source_url": "",
+      "notes": "Network disabled for acquisition run."
+    }
+  ]
+}
