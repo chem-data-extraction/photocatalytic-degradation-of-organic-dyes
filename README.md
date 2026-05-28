@@ -1,62 +1,62 @@
 # Photocatalysis Data Extraction & Cleaning Pipeline
 
-Репозиторий проекта по автоматическому извлечению, очистке и стандартизации данных о фотокаталитической деструкции органических красителей. Данный проект представляет собой воспроизводимый инструмент для создания качественного химического датасета на основе научных публикаций и открытых репозиториев (Zenodo).
+Repository of the project for automatic extraction, cleaning, and standardization of photocatalytic degradation data of organic dyes. This project represents a reproducible tool for creating a high-quality chemical dataset based on scientific publications and open repositories (Zenodo).
 
 ---
 
-## 1. Overview (Обзор)
-Этот проект предназначен для извлечения структурированных параметров фотокатализа (химическая формула катализатора, название красителя, дозировки, тип источника света, время облучения и степень деградации) из научных статей и Supplementary Information (в формате PDF) с помощью систем разметки документов (MinerU) и больших языковых моделей (Gemini API). Полученные данные объединяются с табличными датасетами, скачиваемыми с Zenodo, проходят обогащение через PubChem API, очищаются и приводятся к единому стандарту качества.
+## 1. Overview
+This project is designed to extract structured photocatalysis parameters (catalyst chemical formula, dye name, dosages, light source type, irradiation time, and degradation efficiency) from scientific articles and Supplementary Information (in PDF format) using document layout analysis systems (MinerU) and large language models (Gemini API). The extracted data are combined with tabular datasets downloaded from Zenodo, enriched via the PubChem API, cleaned, and brought to a single quality standard.
 
 ---
 
-## 2. What's inside (Содержимое)
-Архитектура репозитория строго соответствует требованиям воспроизводимости и стандартизации данных:
+## 2. What's inside
+The repository architecture strictly complies with reproducibility and data standardization requirements:
 
 ```text
-├── CITATION.cff           # Машиночитаемый файл цитирования датасета
-├── LICENSE                # Лицензия проекта (MIT)
-├── README.md              # Главная точка входа и описание проекта (этот файл)
-├── environment.yml        # Конфигурационный файл окружения Conda
-├── requirements.txt       # Список зависимостей Python для pip
-├── run_pipeline.py        # Главный скрипт-оркестратор для запуска пайплайна
+├── CITATION.cff           # Machine-readable dataset citation file
+├── LICENSE                # Project license (MIT)
+├── README.md              # Main entry point and description of the project (this file)
+├── environment.yml        # Conda environment configuration file
+├── requirements.txt       # List of Python dependencies for pip
+├── run_pipeline.py        # Main orchestrator script to run the pipeline
 ├── config/
-│   └── default.yaml       # Файл глобальной конфигурации параметров и путей
+│   └── default.yaml       # Global configuration file for parameters and paths
 ├── schemas/
-│   ├── schema.json        # JSON-схема структуры данных для валидации
-│   └── schema.yaml        # YAML-эквивалент схемы структуры данных
-├── metadata/              # Словари контролируемых терминов и единиц измерения
-│   ├── units.csv          # Справочник и маппинг единиц измерения
-│   └── vocabularies.csv   # Словарь соответствия тривиальных имен красителей
-├── data/                  # Хранилище данных, разделенное по этапам обработки
-│   ├── raw/               # ТОЛЬКО ДЛЯ ЧТЕНИЯ: исходные необработанные файлы
-│   │   ├── pdf/           # Оригинальные научные статьи в формате PDF
-│   │   └── downloaded/    # Скачанные "сырые" датасеты с Zenodo
-│   ├── interim/           # Промежуточные частично предобработанные файлы
-│   │   ├── pdf/           # Результаты работы merge-si (объединенные PDF)
-│   │   ├── ingested/      # Распознанный текст и разметка от MinerU (Markdown)
-│   │   ├── extracted/     # Извлеченные JSON-файлы с помощью Gemini API
-│   │   ├── merged/        # Объединенная сырая таблица (merged.csv)
-│   │   └── pubchem_cache.json # Кэш запросов к PubChem API для оптимизации лимитов
-│   └── processed/         # Финальный валидированный и стандартизированный датасет
-│       └── final_cleaned_dataset.csv  # Итоговый опубликованный продукт
-├── scripts/               # Пайплайны обработки данных
-│   ├── merge_si.py        # Слияние основных статей с файлами Supplementary Info (SI)
-│   ├── ingest.py          # Парсинг структуры и текста PDF-файлов (MinerU)
-│   ├── extract.py         # Семантическое извлечение данных (Gemini LLM)
-│   ├── download_zenodo.py # Поиск, скачивание и фильтрация датасетов с Zenodo
-│   ├── merge_extracted.py # Слияние извлеченных JSON и загруженных таблиц
-│   ├── clean_and_validate.py # Очистка, нормализация и валидация датасета по схеме
-│   └── utils/             # Вспомогательные модули (логгер, конфигурация, окружение)
-└── reports/               # Папка для отчетов по качеству данных
-    ├── validation_report.md # Отчет о результатах валидации на соответствие схеме
-    ├── conflicts.csv        # Лог неразрешенных конфликтов и ошибок парсинга
-    └── missing_values_report.md # Отчет по пропущенным значениям (NaN)
+│   ├── schema.json        # JSON schema of the data structure for validation
+│   └── schema.yaml        # YAML equivalent of the data structure schema
+├── metadata/              # Controlled vocabulary and unit dictionaries
+│   ├── units.csv          # Reference and mapping of measurement units
+│   └── vocabularies.csv   # Vocabulary mapping dye trivial names to formal names
+├── data/                  # Data storage, split by processing stages
+│   ├── raw/               # READ-ONLY: original raw files
+│   │   ├── pdf/           # Original scientific articles in PDF format
+│   │   └── downloaded/    # Raw datasets downloaded from Zenodo
+│   ├── interim/           # Interim partially preprocessed files
+│   │   ├── pdf/           # Outputs from merge-si (merged PDFs)
+│   │   ├── ingested/      # Recognized text and layout from MinerU (Markdown)
+│   │   ├── extracted/     # Extracted JSON files via Gemini API
+│   │   ├── merged/        # Merged raw table (merged.csv)
+│   │   └── pubchem_cache.json # Cache of PubChem API queries to optimize rate limits
+│   └── processed/         # Final validated and standardized dataset
+│       └── final_cleaned_dataset.csv  # Final published product
+├── scripts/               # Data processing pipelines
+│   ├── merge_si.py        # Merging main articles with Supplementary Information (SI) files
+│   ├── ingest.py          # Parsing PDF file structure and text (MinerU)
+│   ├── extract.py         # Semantic data extraction (Gemini LLM)
+│   ├── download_zenodo.py # Searching, downloading, and filtering datasets from Zenodo
+│   ├── merge_extracted.py # Merging extracted JSONs and downloaded tables
+│   ├── clean_and_validate.py # Dataset cleaning, normalization, and validation by schema
+│   └── utils/             # Helper modules (logger, config, environment)
+└── reports/               # Folder for data quality reports
+    ├── validation_report.md # Report on validation results against the schema
+    ├── conflicts.csv        # Log of unresolved conflicts and parsing errors
+    └── missing_values_report.md # Report on missing values (NaN)
 ```
 
 ---
 
-## 3. How it was created (Процесс создания)
-Создание финального датасета осуществляется через воспроизводимый пошаговый пайплайн обработки:
+## 3. How it was created
+The final dataset is created through a reproducible step-by-step processing pipeline:
 
 ```mermaid
 graph TD
@@ -69,90 +69,90 @@ graph TD
     G -->|clean & validate| H[data/processed/final_cleaned_dataset.csv]
 ```
 
-### Этапы обработки:
-1. **`merge-si`**: Находит файлы дополнительных материалов (`*_si.pdf`) в `data/raw/pdf` и склеивает их с основным текстом статьи в `data/interim/pdf`. Оригинальные сырые файлы при этом остаются неизменными.
-2. **`ingest`**: С помощью MinerU преобразует PDF в Markdown, извлекая таблицы и разметку.
-3. **`extract`**: Использует модель `gemini-2.5-flash` для извлечения экспериментальных точек из текста и таблиц согласно JSON-схеме.
-4. **`download`**: Опрашивает Zenodo по запросу и скачивает подходящие табличные датасеты в `data/raw/downloaded`, используя LLM для фильтрации нерелевантного контента.
-5. **`merge`**: Объединяет локально извлеченные JSON с таблицами Zenodo на основе сгенерированных маппингов колонок.
-6. **`clean`**: Выполняет очистку единиц измерения по словарю `metadata/units.csv`, сопоставляет названия красителей с тривиальных имен на официальные термины с помощью `metadata/vocabularies.csv` и PubChem API (кэшируя запросы в `data/interim/pubchem_cache.json`), фильтрует строки без корректного CID и проверяет соответствие JSON-схеме.
+### Processing Steps:
+1. **`merge-si`**: Locates supplementary material files (`*_si.pdf`) in `data/raw/pdf` and merges them with the main article text in `data/interim/pdf`. The original raw files remain unmodified.
+2. **`ingest`**: Uses MinerU to convert PDFs into Markdown, extracting tables and layout structures.
+3. **`extract`**: Employs the `gemini-2.5-flash` model to extract experimental data points from text and tables in accordance with a JSON schema.
+4. **`download`**: Queries Zenodo and downloads suitable tabular datasets to `data/raw/downloaded`, utilizing an LLM to filter out irrelevant content.
+5. **`merge`**: Merges locally extracted JSONs with Zenodo tables based on generated column mappings.
+6. **`clean`**: Performs unit cleaning using the `metadata/units.csv` vocabulary, maps dye names from trivial names to official terms using `metadata/vocabularies.csv` and the PubChem API (caching queries in `data/interim/pubchem_cache.json`), filters out rows without a valid CID, and validates compliance with the JSON schema.
 
-*Воспроизводимость:* Все случайные процессы (например, температура генерации LLM) зафиксированы в скриптах через параметры API.
+*Reproducibility:* All stochastic processes (such as LLM generation temperature) are fixed in scripts via API parameters.
 
 ---
 
-## 4. Data schema and columns (Схема данных)
-Каждая строка финального датасета `data/processed/final_cleaned_dataset.csv` представляет собой одно измерение эффективности деградации в конкретный момент времени в рамках одного эксперимента.
+## 4. Data schema and columns
+Each row of the final dataset `data/processed/final_cleaned_dataset.csv` represents a single measurement of degradation efficiency at a specific point in time within one experiment.
 
-| Название колонки | Тип данных | Обязательное? | Описание | Пример |
+| Column Name | Data Type | Required? | Description | Example |
 | :--- | :--- | :---: | :--- | :--- |
-| `source` | String | Нет | Идентификатор источника (DOI статьи или Zenodo ID) | `ao3c07326` |
-| `catalyst_formula` | String | Нет | Химическая формула фотокатализатора | `TiO2` |
-| `pubchem_cid` | Integer | **Да** | Официальный PubChem Compound ID красителя | `6099` |
-| `initial_dye_conc_value` | Number | Нет | Начальная концентрация красителя | `10.0` |
-| `initial_dye_conc_unit` | String | Нет | Единица начальной концентрации (приводится к `mg/L`) | `mg/L` |
-| `catalyst_dosage_value` | Number | Нет | Концентрация/дозировка фотокатализатора | `0.25` |
-| `catalyst_dosage_unit` | String | Нет | Единица дозировки катализатора (приводится к `g/L`) | `g/L` |
-| `light_type` | String | Нет | Тип излучения (`UV`, `Visible`, `Solar`, `LED`, `Dark`) | `Visible` |
-| `time_value` | Number | **Да** | Время от начала облучения | `120.0` |
-| `time_unit` | String | **Да** | Единица времени (приводится к `min`, `hours`, `s`) | `min` |
-| `efficiency_value` | Number | **Да** | Эффективность деградации (%) в интервале 0-100 | `95.5` |
+| `source` | String | No | Source identifier (article DOI or Zenodo ID) | `ao3c07326` |
+| `catalyst_formula` | String | No | Chemical formula of the photocatalyst | `TiO2` |
+| `pubchem_cid` | Integer | **Yes** | Official PubChem Compound ID of the dye | `6099` |
+| `initial_dye_conc_value` | Number | No | Initial concentration of the dye | `10.0` |
+| `initial_dye_conc_unit` | String | No | Initial dye concentration unit (converted to `mg/L`) | `mg/L` |
+| `catalyst_dosage_value` | Number | No | Photocatalyst dosage/concentration | `0.25` |
+| `catalyst_dosage_unit` | String | No | Catalyst dosage unit (converted to `g/L`) | `g/L` |
+| `light_type` | String | No | Type of radiation (`UV`, `Visible`, `Solar`, `LED`, `Dark`) | `Visible` |
+| `time_value` | Number | **Yes** | Time elapsed since the start of irradiation | `120.0` |
+| `time_unit` | String | **Yes** | Time unit (converted to `min`, `hours`, `s`) | `min` |
+| `efficiency_value` | Number | **Yes** | Degradation efficiency (%) within the range of 0-100 | `95.5` |
 
 ---
 
-## 5. Units and controlled vocabularies (Единицы измерения и словари)
-Для исключения разночтений в физико-химических данных используются внешние справочники:
-*   **Единицы измерения (`metadata/units.csv`)**: Содержит сопоставление различных обозначений единиц к стандартизированным видам. Например, `ppm`, `mg l-1`, `mg/l` приводятся к строгому `mg/L`.
-*   **Словарь наименований красителей (`metadata/vocabularies.csv`)**: Сопоставляет сокращения с полными названиями (например, `rhb` -> `rhodamine b`, `mb` -> `methylene blue`).
-*   **PubChem API**: Позволяет верифицировать краситель по названию, получить его структурную формулу и единый идентификатор `pubchem_cid`, отсекая несуществующие или ошибочно распознанные соединения.
+## 5. Units and controlled vocabularies
+External reference dictionaries are used to eliminate discrepancies in physical and chemical data:
+*   **Measurement units (`metadata/units.csv`)**: Contains mappings of various unit representations to standardized formats. For example, `ppm`, `mg l-1`, `mg/l` are normalized to a strict `mg/L`.
+*   **Dye names dictionary (`metadata/vocabularies.csv`)**: Maps abbreviations to full names (e.g., `rhb` -> `rhodamine b`, `mb` -> `methylene blue`).
+*   **PubChem API**: Allows verifying the dye by name, retrieving its structural formula and a single identifier (`pubchem_cid`), and filtering out non-existent or incorrectly recognized compounds.
 
 ---
 
-## 6. Data sources and licenses (Источники и лицензии)
-*   **Исходные PDF-статьи**: Собраны из авторитетных научных журналов по химии (ACS Omega, Scientific Reports и др.). Права на тексты оригинальных статей принадлежат соответствующим издателям.
-*   **Сторонние датасеты**: Загружены с Zenodo (например, репозиторий [zenodo_16640173](https://zenodo.org/records/16640173)), распространяемый под лицензией Creative Commons Attribution 4.0 International (CC-BY-4.0).
-*   **Код проекта**: Поставляется под лицензией **MIT License** (см. файл [LICENSE](file:///home/arutamonofu/dev/study/itmo_extraction/LICENSE)).
+## 6. Data sources and licenses
+*   **Original PDF articles**: Collected from authoritative scientific chemistry journals (ACS Omega, Scientific Reports, etc.). Rights to the original articles belong to their respective publishers.
+*   **Third-party datasets**: Downloaded from Zenodo (e.g., repository [zenodo_16640173](https://zenodo.org/records/16640173)), distributed under the Creative Commons Attribution 4.0 International license (CC-BY-4.0).
+*   **Project code**: Supplied under the **MIT License** (see [LICENSE](file:///home/arutamonofu/dev/study/itmo_extraction/LICENSE)).
 
 ---
 
-## 7. Data quality and validation (Качество данных и валидация)
-Проверка качества осуществляется автоматически при каждом прогоне скрипта очистки. Все отчеты формируются в папке `reports/`:
-1.  **[validation_report.md](file:///home/arutamonofu/dev/study/itmo_extraction/reports/validation_report.md)** — содержит общие метрики валидации, информацию о примененной схеме и лог ошибок валидации по строкам.
-2.  **[missing_values_report.md](file:///home/arutamonofu/dev/study/itmo_extraction/reports/missing_values_report.md)** — содержит детальный анализ пропущенных значений (количественный и процентный состав) в разрезе каждого признака до и после фильтрации.
-3.  **[conflicts.csv](file:///home/arutamonofu/dev/study/itmo_extraction/reports/conflicts.csv)** — фиксирует детальные логи всех неразрешенных нестыковок (например, неподтвержденные красители в PubChem или несоответствие типов данных схемы).
+## 7. Data quality and validation
+Quality validation is performed automatically during each run of the cleaning script. All reports are generated in the `reports/` folder:
+1.  **[validation_report.md](file:///home/arutamonofu/dev/study/itmo_extraction/reports/validation_report.md)** — contains general validation metrics, information on the applied schema, and a row-by-row log of validation errors.
+2.  **[missing_values_report.md](file:///home/arutamonofu/dev/study/itmo_extraction/reports/missing_values_report.md)** — contains a detailed analysis of missing values (quantitative and percentage summary) for each feature before and after filtering.
+3.  **[conflicts.csv](file:///home/arutamonofu/dev/study/itmo_extraction/reports/conflicts.csv)** — records detailed logs of all unresolved discrepancies (e.g., unconfirmed dyes in PubChem or schema data type mismatches).
 
 ---
 
-## 8. How to use the data (Как использовать данные)
+## 8. How to use the data
 
-### Требования
-Для работы требуется установленный Python версии 3.10+ или Conda.
+### Prerequisites
+Requires Python 3.10+ or Conda.
 
-### Настройка окружения
-Установите зависимости с помощью Conda:
+### Environment Setup
+Install dependencies using Conda:
 ```bash
 conda env create -f environment.yml
 conda activate itmo_extraction
 ```
-Или используйте стандартный pip:
+Or use standard pip:
 ```bash
 pip install -r requirements.txt
 ```
 
-### Запуск пайплайна
-1. Поместите исходные статьи в `data/raw/pdf/`.
-2. Добавьте API ключи в файл `.env` в корневой папке:
+### Running the Pipeline
+1. Place raw articles into `data/raw/pdf/`.
+2. Add API keys to the `.env` file in the root folder:
    ```env
-   GEMINI_API_KEY="ваш_ключ_gemini"
-   MINERU_TOKEN="ваш_токен_mineru"
+   GEMINI_API_KEY="your_gemini_key"
+   MINERU_TOKEN="your_mineru_token"
    ```
-3. Запустите оркестратор:
+3. Run the orchestrator:
    ```bash
    python run_pipeline.py --config config/default.yaml
    ```
 
-### Импорт данных в Python
-Итоговый датасет легко загрузить с помощью библиотеки pandas:
+### Importing Data in Python
+The final dataset can be easily loaded using the pandas library:
 ```python
 import pandas as pd
 df = pd.read_csv("data/processed/final_cleaned_dataset.csv")
@@ -161,15 +161,15 @@ print(df.head())
 
 ---
 
-## 9. Known limitations (Известные ограничения)
-*   **Ограничение по типам загрязнителей**: Текущая версия датасета сфокусирована только на трех популярных красителях: Родамин Б, Метиленовый синий и Метиловый оранжевый.
-*   **Зависимость от LLM**: Качество распознавания сложных таблиц и неявных параметров из текста статьи зависит от точности Gemini API.
-*   **Отсутствие параметров реакторов**: Такие характеристики, как мощность лампы (Вт), геометрия реактора и pH среды, не включены в текущую спецификацию схемы данных.
+## 9. Known limitations
+*   **Pollutant types limitation**: The current version of the dataset is focused only on three popular dyes: Rhodamine B, Methylene Blue, and Methyl Orange.
+*   **Dependency on LLMs**: The quality of extracting complex tables and implicit parameters from article texts depends on the accuracy of the Gemini API.
+*   **Lack of reactor parameters**: Characteristics such as lamp power (W), reactor geometry, and medium pH are not included in the current data schema specification.
 
 ---
 
-## 10. Citation and contact (Цитирование и контакты)
-При использовании данного датасета или кода в научных работах, пожалуйста, ссылайтесь в соответствии с файлом [CITATION.cff](file:///home/arutamonofu/dev/study/itmo_extraction/CITATION.cff):
+## 10. Citation and contact
+When using this dataset or code in scientific publications, please cite it in accordance with the [CITATION.cff](file:///home/arutamonofu/dev/study/itmo_extraction/CITATION.cff) file:
 
 ```bibtex
 @misc{PhotocatalysisDataset2026,
@@ -182,15 +182,15 @@ print(df.head())
 }
 ```
 
-*Контакты для связи:* support@itmo.ru
+*Contact:* support@itmo.ru
 
 ---
 
-## 11. Changelog (История изменений)
-*   **`v0.1`** (Внутренняя рабочая версия):
-    *   Создана базовая структура пайплайна и интеграция с Gemini API.
-*   **`v1.0`** (Релизная версия):
-    *   Реализована строгая архитектура директорий `raw/`, `interim/`, `processed/`.
-    *   Внедрены метаданные стандартизации (`units.csv`, `vocabularies.csv`).
-    *   Добавлены автоматические валидационные отчеты (`reports/`).
-    *   Оформлены академические файлы `CITATION.cff` и `LICENSE`.
+## 11. Changelog
+*   **`v0.1`** (Internal working version):
+    *   Created the basic pipeline structure and integration with Gemini API.
+*   **`v1.0`** (Release version):
+    *   Implemented strict directory structure: `raw/`, `interim/`, `processed/`.
+    *   Introduced metadata standardization (`units.csv`, `vocabularies.csv`).
+    *   Added automatic validation reports (`reports/`).
+    *   Created academic files `CITATION.cff` and `LICENSE`.
