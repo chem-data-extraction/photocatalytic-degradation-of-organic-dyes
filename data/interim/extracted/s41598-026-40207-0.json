@@ -1,0 +1,13 @@
+{
+  "source": "ZnO/WO composite for efficient photocatalytic degradation of methylene blue dye under solar light",
+  "catalyst_formula": "5% ZnO/WO3",
+  "dye_name": "Methylene blue",
+  "initial_dye_conc_value": 5.0,
+  "initial_dye_conc_unit": "mg/L",
+  "catalyst_dosage_value": 100.0,
+  "catalyst_dosage_unit": "mg/L",
+  "light_type": "Solar",
+  "time_value": 60.0,
+  "time_unit": "min",
+  "efficiency_value": 93.8
+}

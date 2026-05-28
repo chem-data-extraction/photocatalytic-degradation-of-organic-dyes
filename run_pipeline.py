@@ -38,20 +38,26 @@ def validate_environment(stages_to_run, yaml_config, logger):
     
     pipeline_conf = yaml_config.get("pipeline", {})
     stages_conf = yaml_config.get("stages", {})
-    ingest_conf = stages_conf.get("ingest", {})
     
     # Check pdf directory for PDF processing stages
-    pdf_stages = {"merge-si", "ingest", "extract"}
-    if any(stage in stages_to_run for stage in pdf_stages):
-        pdf_dir = ingest_conf.get("pdf_dir", "data/pdf")
+    if "merge-si" in stages_to_run:
+        merge_si_conf = stages_conf.get("merge_si", {})
+        pdf_dir = merge_si_conf.get("pdf_dir", "data/raw/pdf")
         if not os.path.exists(pdf_dir) or not os.listdir(pdf_dir):
-            logger.warning(f"The PDF directory '{pdf_dir}' is missing or empty. PDF-based stages may have no work to do.")
+            logger.warning(f"The raw PDF directory '{pdf_dir}' is missing or empty. merge-si stage may have no work to do.")
             has_warnings = True
+    elif "ingest" in stages_to_run:
+        ingest_conf = stages_conf.get("ingest", {})
+        pdf_dir = ingest_conf.get("pdf_dir", "data/interim/pdf")
+        if "merge-si" not in stages_to_run:
+            if not os.path.exists(pdf_dir) or not os.listdir(pdf_dir):
+                logger.warning(f"The PDF directory '{pdf_dir}' is missing or empty. Ingest stage may have no work to do.")
+                has_warnings = True
 
-    # Check schema.json for extraction/clean stages
+    # Check schema file for extraction/clean stages
     schema_stages = {"extract", "merge", "clean"}
     if any(stage in stages_to_run for stage in schema_stages):
-        schema_path = pipeline_conf.get("schema_file", "schema.json")
+        schema_path = pipeline_conf.get("schema_file", "schemas/schema.json")
         if not os.path.exists(schema_path):
             logger.error(f"Required schema file '{schema_path}' is missing. Aborting pipeline.")
             sys.exit(1)
@@ -270,7 +276,7 @@ def main():
         sys.exit(1)
     else:
         logger.success("Pipeline run finished successfully!")
-        final_csv = yaml_config.get("stages", {}).get("clean", {}).get("output_file", "data/final_cleaned_dataset.csv")
+        final_csv = yaml_config.get("stages", {}).get("clean", {}).get("output_file", "data/processed/final_cleaned_dataset.csv")
         logger.info(f"Final cleaned dataset is saved at: {final_csv}")
 
 if __name__ == "__main__":

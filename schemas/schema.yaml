@@ -1,0 +1,43 @@
+type: object
+required:
+  - time_value
+  - time_unit
+  - efficiency_value
+properties:
+  source:
+    type: string
+    description: "Source article file name or identifier of the dataset (e.g., DOI/Zenodo record ID)"
+  catalyst_formula:
+    type: string
+    description: "Chemical formula of the photocatalyst used (e.g., TiO2, g-C3N4)"
+  dye_name:
+    type: string
+    description: "Name of the organic dye pollutant (e.g., Rhodamine B, Methylene Blue)"
+  initial_dye_conc_value:
+    type: [number, "null"]
+    description: "Initial concentration of the dye pollutant"
+  initial_dye_conc_unit:
+    type: [string, "null"]
+    description: "Unit of the initial dye concentration (standardized to mg/L)"
+  catalyst_dosage_value:
+    type: [number, "null"]
+    description: "Photocatalyst dosage or concentration in the reaction mixture"
+  catalyst_dosage_unit:
+    type: [string, "null"]
+    description: "Unit of the catalyst dosage (standardized to g/L)"
+  light_type:
+    type: [string, "null"]
+    enum: [UV, Visible, Solar, LED, Dark, null]
+    description: "Type of light source used for irradiation"
+  time_value:
+    type: number
+    description: "Irradiation time value"
+  time_unit:
+    type: string
+    enum: [min, hours, s]
+    description: "Unit of irradiation time (standardized to min)"
+  efficiency_value:
+    type: number
+    minimum: 0
+    maximum: 100
+    description: "Dye degradation efficiency percentage (0 to 100%)"

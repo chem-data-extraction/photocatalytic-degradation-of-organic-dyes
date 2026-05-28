@@ -1,0 +1,37 @@
+source,catalyst_formula,dye_name,initial_dye_conc_value,initial_dye_conc_unit,catalyst_dosage_value,catalyst_dosage_unit,light_type,time_value,time_unit,efficiency_value
+2024.v50.i4.4030,MicNo-ZnO,Methylene blue,10,mg/L,0.25,g/L,UV,180,min,96
+8874791,Mg-doped Ag2O,Methyl Orange,30,ppm,0.4,g,UV,150,min,96.1
+ao3c07326,Mg-Al LDH@g-C3N430@Ag3PO45,Methylene Blue,10,mg L^-1,0.05,g,Visible,45,min,99
+d6na00104a,5% BiVO4/UU-200,rhodamine B,15,mg L-1,10,mg,LED,120,min,96.79
+j.arabjc.2022.103732,Co3O4-Bi2O3,rhodamine B,100,mg/L,0.05,g,Solar,120,min,92
+s41598-026-40207-0,5% ZnO/WO3,Methylene blue,5.0,mg/L,100.0,mg/L,Solar,60.0,min,93.8
+zenodo_16640173,TiO2_SiO2,RhB,7.0,mg/L,0.1,g/L,Visible_LIGHT,15.0,min,5.5147058823529544
+zenodo_16640173,TiO2_SiO2,RhB,7.0,mg/L,0.1,g/L,UV_LIGHT,15.0,min,6.323185011709597
+zenodo_16640173,TiO2_SiO2,RhB,7.0,mg/L,0.1,g/L,Visible_LIGHT,15.0,min,27.97619047619049
+zenodo_16640173,TiO2_SiO2,RhB,7.0,mg/L,0.1,g/L,UV_LIGHT,15.0,min,30.540166204986154
+zenodo_16640173,TiO2_N_col,RhB,7.0,mg/L,0.1,g/L,Visible_LIGHT,15.0,min,41.82194616977226
+zenodo_16640173,TiO2_SiO2,RhB,7.0,mg/L,0.1,g/L,Visible_LIGHT,30.0,min,12.132352941176471
+zenodo_16640173,TiO2_SiO2,RhB,7.0,mg/L,0.1,g/L,Visible_LIGHT,30.0,min,55.208333333333336
+zenodo_16640173,TiO2_SiO2,RhB,7.0,mg/L,0.1,g/L,UV_LIGHT,30.0,min,55.95567867036011
+zenodo_16640173,TiO2_N_col,RhB,7.0,mg/L,0.1,g/L,UV_LIGHT,15.0,min,56.76470588235294
+zenodo_16640173,TiO2_SiO2,RhB,7.0,mg/L,0.1,g/L,UV_LIGHT,30.0,min,14.207650273224036
+zenodo_16640173,TiO2_N_col,RhB,7.0,mg/L,0.1,g/L,Visible_LIGHT,30.0,min,84.33402346445824
+zenodo_16640173,TiO2_N_col,RhB,7.0,mg/L,0.1,g/L,UV_LIGHT,30.0,min,86.25
+zenodo_16640173,TiO2_N_col,RhB,7.0,mg/L,0.1,g/L,Visible_LIGHT,60.0,min,87.3015873015873
+zenodo_16640173,TiO2_N_col,RhB,7.0,mg/L,0.1,g/L,UV_LIGHT,60.0,min,88.75
+zenodo_16640173,TiO2_SiO2,RhB,7.0,mg/L,0.1,g/L,UV_LIGHT,60.0,min,91.55124653739612
+zenodo_16640173,TiO2_SiO2,RhB,7.0,mg/L,0.1,g/L,Visible_LIGHT,60.0,min,91.96428571428572
+zenodo_16640173,TiO2_SiO2,RhB,7.0,mg/L,0.1,g/L,Visible_LIGHT,90.0,min,96.27976190476191
+zenodo_16640173,TiO2_SiO2,RhB,7.0,mg/L,0.1,g/L,UV_LIGHT,90.0,min,97.92243767313019
+zenodo_16640173,TiO2_N_col,RhB,7.0,mg/L,0.1,g/L,Visible_LIGHT,90.0,min,100.0
+zenodo_16640173,TiO2_N_col,RhB,7.0,mg/L,0.1,g/L,Visible_LIGHT,120.0,min,100.0
+zenodo_16640173,TiO2_N_col,RhB,7.0,mg/L,0.1,g/L,UV_LIGHT,90.0,min,100.0
+zenodo_16640173,TiO2_N_col,RhB,7.0,mg/L,0.1,g/L,UV_LIGHT,120.0,min,100.0
+zenodo_16640173,TiO2_SiO2,RhB,7.0,mg/L,0.1,g/L,UV_LIGHT,120.0,min,100.0
+zenodo_16640173,TiO2_SiO2,RhB,7.0,mg/L,0.1,g/L,Visible_LIGHT,120.0,min,100.0
+zenodo_16640173,TiO2_SiO2,RhB,7.0,mg/L,0.1,g/L,Visible_LIGHT,60.0,min,31.029411764705895
+zenodo_16640173,TiO2_SiO2,RhB,7.0,mg/L,0.1,g/L,UV_LIGHT,60.0,min,36.14363778298204
+zenodo_16640173,TiO2_SiO2,RhB,7.0,mg/L,0.1,g/L,Visible_LIGHT,90.0,min,41.61764705882353
+zenodo_16640173,TiO2_SiO2,RhB,7.0,mg/L,0.1,g/L,UV_LIGHT,90.0,min,50.42935206869632
+zenodo_16640173,TiO2_SiO2,RhB,7.0,mg/L,0.1,g/L,Visible_LIGHT,120.0,min,54.26470588235295
+zenodo_16640173,TiO2_SiO2,RhB,7.0,mg/L,0.1,g/L,UV_LIGHT,120.0,min,58.23575331772053

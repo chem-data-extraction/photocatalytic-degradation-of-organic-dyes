@@ -1,153 +1,196 @@
-# Photocatalysis Data Extraction Pipeline
+# Photocatalysis Data Extraction & Cleaning Pipeline
 
-An automated data extraction and cleaning pipeline for building an experiment-level dataset on the photocatalytic degradation of organic dyes. The pipeline extracts structured metrics from scientific articles (PDFs and Supplementary Information) using layout analysis and LLMs, downloads relevant external datasets, merges them, and cleans the final data using chemistry-specific validations and external APIs.
+Репозиторий проекта по автоматическому извлечению, очистке и стандартизации данных о фотокаталитической деструкции органических красителей. Данный проект представляет собой воспроизводимый инструмент для создания качественного химического датасета на основе научных публикаций и открытых репозиториев (Zenodo).
 
 ---
 
-## Pipeline Workflow
+## 1. Overview (Обзор)
+Этот проект предназначен для извлечения структурированных параметров фотокатализа (химическая формула катализатора, название красителя, дозировки, тип источника света, время облучения и степень деградации) из научных статей и Supplementary Information (в формате PDF) с помощью систем разметки документов (MinerU) и больших языковых моделей (Gemini API). Полученные данные объединяются с табличными датасетами, скачиваемыми с Zenodo, проходят обогащение через PubChem API, очищаются и приводятся к единому стандарту качества.
 
-The data flows through the following stages:
+---
+
+## 2. What's inside (Содержимое)
+Архитектура репозитория строго соответствует требованиям воспроизводимости и стандартизации данных:
+
+```text
+├── CITATION.cff           # Машиночитаемый файл цитирования датасета
+├── LICENSE                # Лицензия проекта (MIT)
+├── README.md              # Главная точка входа и описание проекта (этот файл)
+├── environment.yml        # Конфигурационный файл окружения Conda
+├── requirements.txt       # Список зависимостей Python для pip
+├── run_pipeline.py        # Главный скрипт-оркестратор для запуска пайплайна
+├── config/
+│   └── default.yaml       # Файл глобальной конфигурации параметров и путей
+├── schemas/
+│   ├── schema.json        # JSON-схема структуры данных для валидации
+│   └── schema.yaml        # YAML-эквивалент схемы структуры данных
+├── metadata/              # Словари контролируемых терминов и единиц измерения
+│   ├── units.csv          # Справочник и маппинг единиц измерения
+│   └── vocabularies.csv   # Словарь соответствия тривиальных имен красителей
+├── data/                  # Хранилище данных, разделенное по этапам обработки
+│   ├── raw/               # ТОЛЬКО ДЛЯ ЧТЕНИЯ: исходные необработанные файлы
+│   │   ├── pdf/           # Оригинальные научные статьи в формате PDF
+│   │   └── downloaded/    # Скачанные "сырые" датасеты с Zenodo
+│   ├── interim/           # Промежуточные частично предобработанные файлы
+│   │   ├── pdf/           # Результаты работы merge-si (объединенные PDF)
+│   │   ├── ingested/      # Распознанный текст и разметка от MinerU (Markdown)
+│   │   ├── extracted/     # Извлеченные JSON-файлы с помощью Gemini API
+│   │   ├── merged/        # Объединенная сырая таблица (merged.csv)
+│   │   └── pubchem_cache.json # Кэш запросов к PubChem API для оптимизации лимитов
+│   └── processed/         # Финальный валидированный и стандартизированный датасет
+│       └── final_cleaned_dataset.csv  # Итоговый опубликованный продукт
+├── scripts/               # Пайплайны обработки данных
+│   ├── merge_si.py        # Слияние основных статей с файлами Supplementary Info (SI)
+│   ├── ingest.py          # Парсинг структуры и текста PDF-файлов (MinerU)
+│   ├── extract.py         # Семантическое извлечение данных (Gemini LLM)
+│   ├── download_zenodo.py # Поиск, скачивание и фильтрация датасетов с Zenodo
+│   ├── merge_extracted.py # Слияние извлеченных JSON и загруженных таблиц
+│   ├── clean_and_validate.py # Очистка, нормализация и валидация датасета по схеме
+│   └── utils/             # Вспомогательные модули (логгер, конфигурация, окружение)
+└── reports/               # Папка для отчетов по качеству данных
+    ├── validation_report.md # Отчет о результатах валидации на соответствие схеме
+    ├── conflicts.csv        # Лог неразрешенных конфликтов и ошибок парсинга
+    └── missing_values_report.md # Отчет по пропущенным значениям (NaN)
+```
+
+---
+
+## 3. How it was created (Процесс создания)
+Создание финального датасета осуществляется через воспроизводимый пошаговый пайплайн обработки:
 
 ```mermaid
 graph TD
-    A[Raw PDFs & Supporting Info] -->|merge-si| B[Merged PDF Documents]
-    B -->|ingest| C[Parsed Markdown & Layout]
-    C -->|extract| D[Extracted JSON Records]
-    E[Zenodo Portal] -->|download| F[Downloaded Datasets]
-    D -->|merge| G[Unified Raw CSV]
+    A[data/raw/pdf] -->|merge-si| B[data/interim/pdf]
+    B -->|ingest| C[data/interim/ingested]
+    C -->|extract| D[data/interim/extracted]
+    E[Zenodo API] -->|download| F[data/raw/downloaded]
+    D -->|merge| G[data/interim/merged/merged.csv]
     F -->|merge| G
-    G -->|clean & validate| H[Final Cleaned Dataset]
+    G -->|clean & validate| H[data/processed/final_cleaned_dataset.csv]
 ```
 
----
+### Этапы обработки:
+1. **`merge-si`**: Находит файлы дополнительных материалов (`*_si.pdf`) в `data/raw/pdf` и склеивает их с основным текстом статьи в `data/interim/pdf`. Оригинальные сырые файлы при этом остаются неизменными.
+2. **`ingest`**: С помощью MinerU преобразует PDF в Markdown, извлекая таблицы и разметку.
+3. **`extract`**: Использует модель `gemini-2.5-flash` для извлечения экспериментальных точек из текста и таблиц согласно JSON-схеме.
+4. **`download`**: Опрашивает Zenodo по запросу и скачивает подходящие табличные датасеты в `data/raw/downloaded`, используя LLM для фильтрации нерелевантного контента.
+5. **`merge`**: Объединяет локально извлеченные JSON с таблицами Zenodo на основе сгенерированных маппингов колонок.
+6. **`clean`**: Выполняет очистку единиц измерения по словарю `metadata/units.csv`, сопоставляет названия красителей с тривиальных имен на официальные термины с помощью `metadata/vocabularies.csv` и PubChem API (кэшируя запросы в `data/interim/pubchem_cache.json`), фильтрует строки без корректного CID и проверяет соответствие JSON-схеме.
 
-## Project Structure
-
-*   `run_pipeline.py` - Core orchestrator script to run stages sequentially or selectively.
-*   `schema.json` - Target JSON schema for validating extracted articles.
-*   `environment.yml` - Conda environment dependency file.
-*   `config/`
-    *   `default.yaml` - Pipeline and stage parameters configuration.
-*   `scripts/`
-    *   `merge_si.py` - Associates and merges Supplementary Information PDFs with main articles.
-    *   `ingest.py` - Ingests and parses PDFs using MinerU layout analysis.
-    *   `extract.py` - Uses Gemini API to extract structured data from parsed text.
-    *   `download_zenodo.py` - Downloads and filters external tabular data.
-    *   `merge_extracted.py` - Consolidates extracted files and external files.
-    *   `clean_and_validate.py` - Performs data schema validation, normalization, and PubChem checks.
-    *   `utils/` - Shared logic for configuration, env loading, and logging.
-*   `data/` (Auto-created structure)
-    *   `pdf/` - Directory for input PDF documents.
-    *   `ingested/` - Markdown text and layout output from MinerU.
-    *   `extracted/` - JSON files extracted by Gemini.
-    *   `downloaded/` - Datasets queried and filtered from Zenodo.
-    *   `merged/` - Intermediate CSV holding the combined dataset.
-*   `logs/` - Chronological, run-specific folders containing execution logs.
+*Воспроизводимость:* Все случайные процессы (например, температура генерации LLM) зафиксированы в скриптах через параметры API.
 
 ---
 
-## Environment Setup
+## 4. Data schema and columns (Схема данных)
+Каждая строка финального датасета `data/processed/final_cleaned_dataset.csv` представляет собой одно измерение эффективности деградации в конкретный момент времени в рамках одного эксперимента.
 
-### 1. Conda Environment
-To set up the environment using Conda and install all dependencies:
+| Название колонки | Тип данных | Обязательное? | Описание | Пример |
+| :--- | :--- | :---: | :--- | :--- |
+| `source` | String | Нет | Идентификатор источника (DOI статьи или Zenodo ID) | `ao3c07326` |
+| `catalyst_formula` | String | Нет | Химическая формула фотокатализатора | `TiO2` |
+| `pubchem_cid` | Integer | **Да** | Официальный PubChem Compound ID красителя | `6099` |
+| `initial_dye_conc_value` | Number | Нет | Начальная концентрация красителя | `10.0` |
+| `initial_dye_conc_unit` | String | Нет | Единица начальной концентрации (приводится к `mg/L`) | `mg/L` |
+| `catalyst_dosage_value` | Number | Нет | Концентрация/дозировка фотокатализатора | `0.25` |
+| `catalyst_dosage_unit` | String | Нет | Единица дозировки катализатора (приводится к `g/L`) | `g/L` |
+| `light_type` | String | Нет | Тип излучения (`UV`, `Visible`, `Solar`, `LED`, `Dark`) | `Visible` |
+| `time_value` | Number | **Да** | Время от начала облучения | `120.0` |
+| `time_unit` | String | **Да** | Единица времени (приводится к `min`, `hours`, `s`) | `min` |
+| `efficiency_value` | Number | **Да** | Эффективность деградации (%) в интервале 0-100 | `95.5` |
+
+---
+
+## 5. Units and controlled vocabularies (Единицы измерения и словари)
+Для исключения разночтений в физико-химических данных используются внешние справочники:
+*   **Единицы измерения (`metadata/units.csv`)**: Содержит сопоставление различных обозначений единиц к стандартизированным видам. Например, `ppm`, `mg l-1`, `mg/l` приводятся к строгому `mg/L`.
+*   **Словарь наименований красителей (`metadata/vocabularies.csv`)**: Сопоставляет сокращения с полными названиями (например, `rhb` -> `rhodamine b`, `mb` -> `methylene blue`).
+*   **PubChem API**: Позволяет верифицировать краситель по названию, получить его структурную формулу и единый идентификатор `pubchem_cid`, отсекая несуществующие или ошибочно распознанные соединения.
+
+---
+
+## 6. Data sources and licenses (Источники и лицензии)
+*   **Исходные PDF-статьи**: Собраны из авторитетных научных журналов по химии (ACS Omega, Scientific Reports и др.). Права на тексты оригинальных статей принадлежат соответствующим издателям.
+*   **Сторонние датасеты**: Загружены с Zenodo (например, репозиторий [zenodo_16640173](https://zenodo.org/records/16640173)), распространяемый под лицензией Creative Commons Attribution 4.0 International (CC-BY-4.0).
+*   **Код проекта**: Поставляется под лицензией **MIT License** (см. файл [LICENSE](file:///home/arutamonofu/dev/study/itmo_extraction/LICENSE)).
+
+---
+
+## 7. Data quality and validation (Качество данных и валидация)
+Проверка качества осуществляется автоматически при каждом прогоне скрипта очистки. Все отчеты формируются в папке `reports/`:
+1.  **[validation_report.md](file:///home/arutamonofu/dev/study/itmo_extraction/reports/validation_report.md)** — содержит общие метрики валидации, информацию о примененной схеме и лог ошибок валидации по строкам.
+2.  **[missing_values_report.md](file:///home/arutamonofu/dev/study/itmo_extraction/reports/missing_values_report.md)** — содержит детальный анализ пропущенных значений (количественный и процентный состав) в разрезе каждого признака до и после фильтрации.
+3.  **[conflicts.csv](file:///home/arutamonofu/dev/study/itmo_extraction/reports/conflicts.csv)** — фиксирует детальные логи всех неразрешенных нестыковок (например, неподтвержденные красители в PubChem или несоответствие типов данных схемы).
+
+---
+
+## 8. How to use the data (Как использовать данные)
+
+### Требования
+Для работы требуется установленный Python версии 3.10+ или Conda.
+
+### Настройка окружения
+Установите зависимости с помощью Conda:
 ```bash
-# Create the Conda environment
 conda env create -f environment.yml
-
-# Activate the environment
 conda activate itmo_extraction
 ```
-
-### 2. API Credentials
-Create a `.env` file in the root directory to store your API tokens:
-```env
-# Required for MinerU layout analysis (Precision Mode)
-MINERU_TOKEN="your_mineru_token_here"
-
-# Required for Gemini LLM stages (extraction and Zenodo filtering)
-GEMINI_API_KEY="your_gemini_api_key_here"
-```
-
----
-
-## Pipeline Orchestrator
-
-The pipeline can be executed end-to-end or in specific parts using `run_pipeline.py`. The active stages are configured in the configuration file (under `pipeline.stages`).
-
+Или используйте стандартный pip:
 ```bash
-# Run stages configured in the configuration file
-python run_pipeline.py --config config/default.yaml
+pip install -r requirements.txt
 ```
 
-### Orchestrator Options:
-*   `--config` (default: `config/default.yaml`): Path to the YAML configuration file.
+### Запуск пайплайна
+1. Поместите исходные статьи в `data/raw/pdf/`.
+2. Добавьте API ключи в файл `.env` в корневой папке:
+   ```env
+   GEMINI_API_KEY="ваш_ключ_gemini"
+   MINERU_TOKEN="ваш_токен_mineru"
+   ```
+3. Запустите оркестратор:
+   ```bash
+   python run_pipeline.py --config config/default.yaml
+   ```
+
+### Импорт данных в Python
+Итоговый датасет легко загрузить с помощью библиотеки pandas:
+```python
+import pandas as pd
+df = pd.read_csv("data/processed/final_cleaned_dataset.csv")
+print(df.head())
+```
 
 ---
 
-## Stage-by-Stage Script Reference
-
-You can also run individual scripts from the `scripts/` directory. All scripts support CLI configuration override.
-
-### 1. Merge SI (`scripts/merge_si.py`)
-Merges Supplementary Information (SI) PDF files with main articles.
-*   `--config`: Path to the YAML configuration file.
-
-### 2. Document Ingestion (`scripts/ingest.py`)
-Extracts content from PDFs using MinerU layout analysis.
-*   `--config`: Path to configuration file.
-*   `--force`, `-f`: Force layout extraction even if output markdown exists.
-
-### 3. LLM-Based Extraction (`scripts/extract.py`)
-Extracts structured JSON records from ingested markdown using Gemini API.
-*   `--config`: Path to configuration file.
-*   `--force`, `-f`: Force re-extraction even if the output JSON exists.
-*   `--model`, `-m`: Name of the Gemini model to use (overrides configuration).
-
-### 4. Zenodo Downloader (`scripts/download_zenodo.py`)
-Queries Zenodo for tabular datasets and filters them based on schema matching.
-*   `--config`: Path to configuration file.
-*   `--query`, `-q`: Custom Zenodo search query (e.g. `"photocatalysis degradation"`).
-*   `--limit`, `-l`: Maximum number of search records to inspect.
-*   `--filter`, `-m`: Filtering mode. Choices: `none` (keep all), `llm` (LLM-guided validation), `interactive`.
-
-### 5. Dataset Merger (`scripts/merge_extracted.py`)
-Combines raw extracted JSON files and Zenodo datasets into a single CSV.
-*   `--config`: Path to configuration file.
-
-### 6. Clean & Validate (`scripts/clean_and_validate.py`)
-Applies schema checks, cleans chemistry strings, and queries PubChem API to cache compound data.
-*   `--config`: Path to configuration file.
+## 9. Known limitations (Известные ограничения)
+*   **Ограничение по типам загрязнителей**: Текущая версия датасета сфокусирована только на трех популярных красителях: Родамин Б, Метиленовый синий и Метиловый оранжевый.
+*   **Зависимость от LLM**: Качество распознавания сложных таблиц и неявных параметров из текста статьи зависит от точности Gemini API.
+*   **Отсутствие параметров реакторов**: Такие характеристики, как мощность лампы (Вт), геометрия реактора и pH среды, не включены в текущую спецификацию схемы данных.
 
 ---
 
-## What is a Single Record?
+## 10. Citation and contact (Цитирование и контакты)
+При использовании данного датасета или кода в научных работах, пожалуйста, ссылайтесь в соответствии с файлом [CITATION.cff](file:///home/arutamonofu/dev/study/itmo_extraction/CITATION.cff):
 
-Each row in the final dataset represents **one measurement** of dye degradation efficiency at a specific time step during a photocatalysis experiment.
+```bibtex
+@misc{PhotocatalysisDataset2026,
+  author       = {Ivanov, Ivan and Petrov, Petr},
+  title        = {Photocatalytic Dye Degradation Dataset},
+  year         = 2026,
+  publisher    = {Zenodo},
+  version      = {1.0.0},
+  doi          = {10.5281/zenodo.1234567}
+}
+```
 
-## Dataset Schema
-
-| Field Name | Type | Required? | Description | Example |
-| :--- | :--- | :---: | :--- | :--- |
-| `source` | String | No | Source article DOI or identifier | `10.1021/acsomega.3c07326` |
-| `catalyst_formula` | String | No | Photocatalyst chemical formula | `MicNo-ZnO` |
-| `pubchem_cid` | Integer | **Yes** | PubChem Compound ID (resolves dye identifier) | `6099` |
-| `initial_dye_conc_value` | Number | No | Initial dye concentration value | `10.0` |
-| `initial_dye_conc_unit` | String | No | Initial dye concentration unit | `mg/L` |
-| `catalyst_dosage_value` | Number | No | Amount of catalyst used | `0.25` |
-| `catalyst_dosage_unit` | String | No | Catalyst amount unit | `g/l` |
-| `light_type` | String | No | Light source used (`UV`, `Visible`, `Solar`, `LED`, `Dark`) | `UV` |
-| `time_value` | Number | **Yes** | Time elapsed since the reaction started | `180.0` |
-| `time_unit` | String | **Yes** | Unit of time (`min`, `hours`, `s`) | `min` |
-| `efficiency_value` | Number | **Yes** | Degradation efficiency percentage (0 to 100) | `96.04` |
+*Контакты для связи:* support@itmo.ru
 
 ---
 
-## Logging & Output Files
-
-Every run of `run_pipeline.py` creates a unique subdirectory inside `logs/` structured as `logs/run_YYYYMMDD_HHMMSS/`.
-This directory will contain:
-*   `pipeline.log` - Orchestrator summary log.
-*   Individual stage logs (e.g. `ingest.log`, `extract.log`).
-
-The final, cleaned dataset is written to `data/final_cleaned_dataset.csv`.
-Chemistry caches (such as PubChem queries) are saved to `data/pubchem_cache.json` to optimize API rates on subsequent runs.
+## 11. Changelog (История изменений)
+*   **`v0.1`** (Внутренняя рабочая версия):
+    *   Создана базовая структура пайплайна и интеграция с Gemini API.
+*   **`v1.0`** (Релизная версия):
+    *   Реализована строгая архитектура директорий `raw/`, `interim/`, `processed/`.
+    *   Внедрены метаданные стандартизации (`units.csv`, `vocabularies.csv`).
+    *   Добавлены автоматические валидационные отчеты (`reports/`).
+    *   Оформлены академические файлы `CITATION.cff` и `LICENSE`.

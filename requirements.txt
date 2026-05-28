@@ -1,0 +1,11 @@
+# ITMO Photocatalysis Data Extraction and Cleaning Pipeline
+# Required packages to run the end-to-end pipeline
+
+pandas>=1.5.0
+requests>=2.28.0
+jsonschema>=4.17.0
+openpyxl>=3.0.10
+pypdf>=3.1.0
+google-genai>=0.1.0
+mineru>=0.1.0
+pyyaml>=6.0

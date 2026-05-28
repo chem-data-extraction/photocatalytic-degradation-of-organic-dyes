@@ -1,4 +1,5 @@
 import os
+import shutil
 import argparse
 from pathlib import Path
 from pypdf import PdfWriter
@@ -7,24 +8,32 @@ from utils.config import load_config
 
 logger = get_logger("merge_si", "logs/merge.log")
 
-def merge_si(pdf_dir_path="data/pdf"):
+def merge_si(pdf_dir_path="data/raw/pdf", output_pdf_dir_path="data/interim/pdf"):
     pdf_dir = Path(pdf_dir_path)
+    output_pdf_dir = Path(output_pdf_dir_path)
     
     if not pdf_dir.exists():
         logger.error(f"PDF directory {pdf_dir} does not exist.")
         return
         
-    # Find all files in data/pdf
+    output_pdf_dir.mkdir(parents=True, exist_ok=True)
+    
+    # Find all files in raw/pdf
     pdf_files = list(pdf_dir.glob("*.pdf"))
     
     # Filter SI files
     si_files = [f for f in pdf_files if f.name.lower().endswith("_si.pdf")]
     
+    # Copy all non-SI PDFs to output_pdf_dir first
+    for f in pdf_files:
+        if f not in si_files:
+            shutil.copy2(f, output_pdf_dir / f.name)
+            
     if not si_files:
-        logger.warning(f"No *_si.pdf files found in {pdf_dir} to merge.")
+        logger.info(f"No *_si.pdf files found in {pdf_dir} to merge. Copied all PDFs to {output_pdf_dir}.")
         return
 
-    logger.info(f"Found {len(si_files)} SI file(s). Starting matching and merging...\n")
+    logger.info(f"Found {len(si_files)} SI file(s). Starting matching and merging into {output_pdf_dir}...\n")
     merged_count = 0
 
     for si_path in si_files:
@@ -52,36 +61,28 @@ def merge_si(pdf_dir_path="data/pdf"):
             logger.info(f"  Main file: {main_path.name}")
             logger.info(f"  SI file:   {si_path.name}")
             
-            # Perform merging
+            # Destination merged file path
+            dest_merged_path = output_pdf_dir / main_path.name
             writer = PdfWriter()
-            temp_merged_path = pdf_dir / f"temp_{main_path.name}"
             
             try:
-                # Append main then SI using original files
+                # Append main then SI using original raw files
                 writer.append(main_path)
                 writer.append(si_path)
                 
-                with open(temp_merged_path, "wb") as f_out:
+                with open(dest_merged_path, "wb") as f_out:
                     writer.write(f_out)
                 writer.close()
                 
-                # Replace the main PDF with the merged one
-                temp_merged_path.replace(main_path)
-                
-                # Delete the original SI PDF from the main directory so it is not processed
-                si_path.unlink()
-                
-                logger.success(f"  Merged {main_path.name} and {si_path.name} -> {main_path.name}\n")
+                logger.success(f"  Merged {main_path.name} and {si_path.name} -> {dest_merged_path.name}\n")
                 merged_count += 1
             except Exception as e:
                 logger.error(f"  Failed to merge {main_path.name} and {si_path.name}: {e}\n")
-                if temp_merged_path.exists():
-                    temp_merged_path.unlink()
                 writer.close()
         else:
             logger.warning(f"Could not find matching main PDF for {si_name}\n")
 
-    logger.success(f"Done! Successfully merged {merged_count} PDF pairs.")
+    logger.success(f"Done! Successfully merged {merged_count} PDF pairs into {output_pdf_dir}.")
 
 if __name__ == "__main__":
     from utils.config import get_config_and_argv
@@ -91,7 +92,8 @@ if __name__ == "__main__":
     parser.add_argument("--config", default="config/default.yaml", help="Path to config file")
     parser.parse_args(remaining_argv)
     
-    pdf_dir = config.get("stages", {}).get("merge_si", {}).get("pdf_dir", "data/pdf")
+    pdf_dir = config.get("stages", {}).get("merge_si", {}).get("pdf_dir", "data/raw/pdf")
+    output_pdf_dir = config.get("stages", {}).get("merge_si", {}).get("output_pdf_dir", "data/interim/pdf")
     
-    merge_si(pdf_dir)
+    merge_si(pdf_dir, output_pdf_dir)
 
