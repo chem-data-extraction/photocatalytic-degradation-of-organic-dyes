@@ -1,13 +1,13 @@
 {
-  "source_doi": "10.1039/d6na00104a",
+  "source": "A BiVO4/UU-200 heterojunction for efficient visible-light photocatalytic degradation of rhodamine B",
   "catalyst_formula": "5% BiVO4/UU-200",
   "dye_name": "rhodamine B",
-  "initial_dye_conc_value": 15.0,
+  "initial_dye_conc_value": 15,
   "initial_dye_conc_unit": "mg L-1",
-  "catalyst_dosage_value": 10.0,
+  "catalyst_dosage_value": 10,
   "catalyst_dosage_unit": "mg",
   "light_type": "LED",
-  "time_value": 120.0,
+  "time_value": 120,
   "time_unit": "min",
   "efficiency_value": 96.79
 }

@@ -6,7 +6,7 @@
     "efficiency_value"
   ],
   "properties": {
-    "source_doi": {
+    "source": {
       "type": "string"
     },
     "catalyst_formula": {

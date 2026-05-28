@@ -5,19 +5,10 @@ import re
 import json
 import argparse
 from mineru import MinerU
+from utils.logger import get_logger
+from utils.env import load_dotenv
 
-def load_dotenv(dotenv_path=".env"):
-    if os.path.exists(dotenv_path):
-        with open(dotenv_path, "r", encoding="utf-8") as f:
-            for line in f:
-                line = line.strip()
-                if line and not line.startswith("#"):
-                    if "=" in line:
-                        key, val = line.split("=", 1)
-                        val = val.strip()
-                        if (val.startswith('"') and val.endswith('"')) or (val.startswith("'") and val.endswith("'")):
-                            val = val[1:-1]
-                        os.environ[key.strip()] = val
+logger = get_logger("ingest")
 
 def cleanup_unused_images(pdf_output_dir, md_file_path):
     if not os.path.exists(md_file_path):
@@ -26,7 +17,7 @@ def cleanup_unused_images(pdf_output_dir, md_file_path):
     # 1. Find the content_list.json file
     content_lists = glob.glob(os.path.join(pdf_output_dir, "*_content_list.json"))
     if not content_lists:
-        print("  [WARNING] No content list found. Skipping chart-only filtering to prevent data loss.")
+        logger.warning("  No content list found. Skipping chart-only filtering to prevent data loss.")
         return
 
     # 2. Identify chart images from content_list.json
@@ -40,7 +31,7 @@ def cleanup_unused_images(pdf_output_dir, md_file_path):
                 if block.get("type") == "chart":
                     chart_images.add(name)
     except Exception as e:
-        print(f"      [x] Error reading content list for chart detection: {e}")
+        logger.error(f"      Error reading content list for chart detection: {e}")
         return
 
     # 3. Read Markdown content
@@ -60,7 +51,7 @@ def cleanup_unused_images(pdf_output_dir, md_file_path):
         if md_content != original_content:
             with open(md_file_path, "w", encoding="utf-8") as f:
                 f.write(md_content)
-            print(f"  [-] Removed {len(images_to_delete)} non-chart references from markdown.")
+            logger.info(f"  Removed {len(images_to_delete)} non-chart references from markdown.")
 
     # 6. Delete non-chart files from images/ folder
     images_dir = os.path.join(pdf_output_dir, "images")
@@ -76,46 +67,56 @@ def cleanup_unused_images(pdf_output_dir, md_file_path):
                 os.remove(os.path.join(images_dir, img))
                 deleted_count += 1
             except Exception as e:
-                print(f"      [x] Error deleting {img}: {e}")
+                logger.error(f"      Error deleting {img}: {e}")
                 
     if deleted_count > 0:
-        print(f"  [-] Cleaned up {deleted_count} non-chart images. Kept {len(chart_images)} chart figures.")
+        logger.info(f"  Cleaned up {deleted_count} non-chart images. Kept {len(chart_images)} chart figures.")
 
 def main():
     # Load environment variables from .env file
     load_dotenv()
 
+    from utils.config import get_config_and_argv
+    config, config_path, remaining_argv = get_config_and_argv()
+    ingest_conf = config.get("stages", {}).get("ingest", {})
+
     # Parse command line arguments (skips already processed PDFs by default)
     parser = argparse.ArgumentParser(description="Extract content from PDFs using MinerU.")
     parser.add_argument(
+        "--config",
+        default="config/default.yaml",
+        help="Path to YAML configuration file."
+    )
+    parser.add_argument(
         "--force", "-f",
         action="store_true",
+        default=ingest_conf.get("force", False),
         help="Force re-extraction even if the output markdown file already exists."
     )
-    args, unknown = parser.parse_known_args()
+    args = parser.parse_args(remaining_argv)
     skip_existing = not args.force
 
     # Configurable extraction parameters for Precision Mode
-    EXTRACTION_MODEL = "vlm"      # Choices: "vlm", "pipeline"
-    ENABLE_FORMULA = True        # Enable equation/formula recognition (LaTeX)
-    ENABLE_TABLE = True          # Enable table structure recognition
-    ENABLE_OCR = False            # Force OCR for scanned documents
-    OCR_LANGUAGE = "en"          # OCR language ("en", "zh", "auto", etc.)
+    EXTRACTION_MODEL = ingest_conf.get("extraction_model", "vlm")      # Choices: "vlm", "pipeline"
+    ENABLE_FORMULA = ingest_conf.get("enable_formula", True)        # Enable equation/formula recognition (LaTeX)
+    ENABLE_TABLE = ingest_conf.get("enable_table", True)          # Enable table structure recognition
+    ENABLE_OCR = ingest_conf.get("enable_ocr", False)            # Force OCR for scanned documents
+    OCR_LANGUAGE = ingest_conf.get("ocr_language", "en")          # OCR language ("en", "zh", "auto", etc.)
     
     # 1. Check API token
     token = os.environ.get("MINERU_TOKEN")
     if not token:
-        print("[WARNING] MINERU_TOKEN environment variable is not set.")
-        print("For high-precision extraction (including tables, figures, formulas), please set it:")
-        print("  export MINERU_TOKEN='your_api_token' or place it in a .env file.")
-        print("Proceeding in Flash (free/limited) mode...\n")
+        logger.warning("MINERU_TOKEN environment variable is not set.")
+        logger.info("For high-precision extraction (including tables, figures, formulas), please set it:")
+        logger.info("  export MINERU_TOKEN='your_api_token' or place it in a .env file.")
+        logger.info("Proceeding in Flash (free/limited) mode...\n")
         client = MinerU()
     else:
-        print("[INFO] MINERU_TOKEN found. Processing in Precision Mode (high-precision VLM + OCR).")
+        logger.info("MINERU_TOKEN found. Processing in Precision Mode (high-precision VLM + OCR).")
         client = MinerU(token)
 
-    pdf_dir = "data/pdf"
-    ingested_dir = "data/ingested"
+    pdf_dir = ingest_conf.get("pdf_dir", "data/pdf")
+    ingested_dir = ingest_conf.get("ingested_dir", "data/ingested")
 
     # Ensure output directory exists
     os.makedirs(ingested_dir, exist_ok=True)
@@ -124,11 +125,11 @@ def main():
     pdf_files = glob.glob(os.path.join(pdf_dir, "*.pdf"))
     
     if not pdf_files:
-        print(f"[ERROR] No PDF files found in {pdf_dir}.")
-        print("Please place your PDF files in that folder and run the script again.")
+        logger.error(f"No PDF files found in {pdf_dir}.")
+        logger.info("Please place your PDF files in that folder and run the script again.")
         sys.exit(1)
 
-    print(f"Found {len(pdf_files)} PDF(s) to process.\n")
+    logger.info(f"Found {len(pdf_files)} PDF(s) to process.\n")
 
     for pdf_path in pdf_files:
         pdf_name = os.path.splitext(os.path.basename(pdf_path))[0]
@@ -137,11 +138,11 @@ def main():
         md_file_path = os.path.join(pdf_output_dir, f"{pdf_name}.md")
 
         if skip_existing and os.path.exists(md_file_path):
-            print(f"--- Skipping: {pdf_name}.pdf (Already processed) ---")
-            print(f"  [INFO] Found existing output markdown at: {md_file_path}\n")
+            logger.info(f"--- Skipping: {pdf_name}.pdf (Already processed) ---")
+            logger.info(f"  Found existing output markdown at: {md_file_path}\n")
             continue
 
-        print(f"--- Processing: {pdf_name}.pdf ---")
+        logger.info(f"--- Processing: {pdf_name}.pdf ---")
         
         try:
             # 2. Perform Extraction
@@ -165,7 +166,7 @@ def main():
             # 3. Save all resources (including model.json, layout.json, pdf, etc.)
             # Extracting directly into pdf_output_dir
             result.save_all(pdf_output_dir)
-            print(f"  [+] Saved figures and assets to: {pdf_output_dir}")
+            logger.success(f"  Saved figures and assets to: {pdf_output_dir}")
 
             # 4. Rename full.md to {pdf_name}.md to avoid duplicate Markdown files
             full_md_path = os.path.join(pdf_output_dir, "full.md")
@@ -173,25 +174,25 @@ def main():
                 if os.path.exists(md_file_path):
                     os.remove(md_file_path)
                 os.rename(full_md_path, md_file_path)
-                print(f"  [+] Renamed full.md to: {md_file_path}")
+                logger.success(f"  Renamed full.md to: {md_file_path}")
 
             # 5. Clean up redundant origin PDF file (we already have it in data/pdf)
             for filename in os.listdir(pdf_output_dir):
                 if filename.endswith("_origin.pdf"):
                     try:
                         os.remove(os.path.join(pdf_output_dir, filename))
-                        print(f"  [-] Removed redundant PDF copy: {filename}")
+                        logger.info(f"  Removed redundant PDF copy: {filename}")
                     except Exception as e:
-                        print(f"  [x] Error deleting redundant PDF: {e}")
+                        logger.error(f"  Error deleting redundant PDF: {e}")
 
             # 6. Clean up images folder (keep only referenced figures)
             cleanup_unused_images(pdf_output_dir, md_file_path)
             
         except Exception as e:
-            print(f"  [x] Error processing {pdf_name}.pdf: {e}")
-        print()
+            logger.error(f"  Error processing {pdf_name}.pdf: {e}")
+        logger.plain("")
 
-    print("Processing complete!")
+    logger.success("Processing complete!")
 
 if __name__ == "__main__":
     main()

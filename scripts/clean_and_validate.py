@@ -7,20 +7,12 @@ Created for: ITMO Photocatalysis Project
 import os
 import json
 import time
-import logging
+from utils.logger import get_logger
 import requests
 import jsonschema
 import pandas as pd
 
-# Configure logging to console and a log file
-logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(levelname)s - %(message)s',
-    handlers=[
-        logging.StreamHandler(),
-        logging.FileHandler("cleaning.log", encoding="utf-8")
-    ]
-)
+logger = get_logger("clean_and_validate", "logs/cleaning.log")
 
 CACHE_FILE = "data/pubchem_cache.json"
 
@@ -31,7 +23,7 @@ def load_cache():
             with open(CACHE_FILE, "r", encoding="utf-8") as f:
                 return json.load(f)
         except Exception as e:
-            logging.warning(f"Failed to load PubChem cache: {e}. Starting fresh.")
+            logger.warning(f"Failed to load PubChem cache: {e}. Starting fresh.")
     return {}
 
 def save_cache(cache):
@@ -41,7 +33,7 @@ def save_cache(cache):
         with open(CACHE_FILE, "w", encoding="utf-8") as f:
             json.dump(cache, f, indent=2, ensure_ascii=False)
     except Exception as e:
-        logging.warning(f"Failed to save PubChem cache: {e}")
+        logger.warning(f"Failed to save PubChem cache: {e}")
 
 def resolve_dye_name(name):
     """Maps common abbreviations to official names for better PubChem API query success."""
@@ -62,10 +54,10 @@ def enrich_dye_info(raw_name, cache):
     cache_key = resolved_name.lower().strip()
     
     if cache_key in cache:
-        logging.info(f"Cache hit for dye: '{raw_name}' -> '{resolved_name}'")
+        logger.info(f"Cache hit for dye: '{raw_name}' -> '{resolved_name}'")
         return cache[cache_key]
         
-    logging.info(f"Cache miss for dye: '{raw_name}' -> '{resolved_name}'. Querying PubChem API...")
+    logger.info(f"Cache miss for dye: '{raw_name}' -> '{resolved_name}'. Querying PubChem API...")
     url = f"https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/name/{resolved_name}/property/Title,MolecularFormula/JSON"
     
     try:
@@ -91,12 +83,12 @@ def enrich_dye_info(raw_name, cache):
                 save_cache(cache)
                 return result
         elif response.status_code == 404:
-            logging.warning(f"Dye '{resolved_name}' not found in PubChem REST API.")
+            logger.warning(f"Dye '{resolved_name}' not found in PubChem REST API.")
         else:
-            logging.warning(f"PubChem API returned HTTP status {response.status_code} for dye '{resolved_name}'.")
+            logger.warning(f"PubChem API returned HTTP status {response.status_code} for dye '{resolved_name}'.")
             
     except Exception as e:
-        logging.error(f"Error querying PubChem API for dye '{resolved_name}': {e}")
+        logger.error(f"Error querying PubChem API for dye '{resolved_name}': {e}")
         
     # Store fallback/default in cache to prevent continuous failing requests
     result = {
@@ -133,17 +125,17 @@ def clean_and_validate(input_csv, output_csv, schema_path):
     Pipeline to clean, enrich, handle NaNs, and validate the photocatalysis dataset.
     """
     if not os.path.exists(input_csv):
-        logging.error(f"Input merged CSV file '{input_csv}' not found.")
-        return
+        logger.error(f"Input merged CSV file '{input_csv}' not found.")
+        return False
         
     df = pd.read_csv(input_csv)
-    logging.info(f"Loaded {len(df)} rows from '{input_csv}'")
+    logger.info(f"Loaded {len(df)} rows from '{input_csv}'")
     
     # 1. Unit Harmonization
     unit_cols = [col for col in df.columns if col.endswith('_unit')]
     for col in unit_cols:
         df[col] = df[col].apply(harmonize_unit)
-    logging.info(f"Harmonized unit columns: {unit_cols}")
+    logger.info(f"Harmonized unit columns: {unit_cols}")
     
     # 2. Data Enrichment via PubChem API
     cache = load_cache()
@@ -160,11 +152,12 @@ def clean_and_validate(input_csv, output_csv, schema_path):
     df['dye_name'] = preferred_terms
     df['pubchem_cid'] = cids
     df['molecular_formula'] = formulas
-    logging.info("Enriched and replaced dye_name with preferred term and added pubchem_cid, molecular_formula.")
+    logger.info("Enriched and replaced dye_name with preferred term and added pubchem_cid, molecular_formula.")
     
     # 3. NaN Handling
     # Fill Zenodo light_type using Light Condition from source Excel if it is available
     excel_path = 'data/downloaded/zenodo_16640173/LC1_φ_NMs_data.xlsx'
+    zenodo_mask = df['source'] == 'zenodo_16640173'
     if os.path.exists(excel_path):
         try:
             zenodo_df = pd.read_excel(excel_path, sheet_name='9. Descriptors')
@@ -172,20 +165,19 @@ def clean_and_validate(input_csv, output_csv, schema_path):
                 'UV_LIGHT': 'UV',
                 'Visible_LIGHT': 'Visible'
             }
-            zenodo_mask = df['source_doi'] == 'zenodo_16640173'
             if len(zenodo_df) == zenodo_mask.sum():
                 mapped_lights = zenodo_df[' Light Condition'].map(light_mapping).fillna('UV')
                 df.loc[zenodo_mask, 'light_type'] = mapped_lights.values
-                logging.info("Mapped Zenodo light_type values using the source Excel file.")
+                logger.info("Mapped Zenodo light_type values using the source Excel file.")
             else:
                 df.loc[zenodo_mask, 'light_type'] = 'UV'
-                logging.warning("Zenodo row count mismatch. Defaulting Zenodo light_type to 'UV'.")
+                logger.warning("Zenodo row count mismatch. Defaulting Zenodo light_type to 'UV'.")
         except Exception as e:
-            logging.warning(f"Could not read Excel file to map light types: {e}. Defaulting Zenodo light_type to 'UV'.")
-            df.loc[df['source_doi'] == 'zenodo_16640173', 'light_type'] = 'UV'
+            logger.warning(f"Could not read Excel file to map light types: {e}. Defaulting Zenodo light_type to 'UV'.")
+            df.loc[df['source'] == 'zenodo_16640173', 'light_type'] = 'UV'
     else:
-        df.loc[df['source_doi'] == 'zenodo_16640173', 'light_type'] = 'UV'
-        logging.info("Source Excel not found. Set Zenodo light_type to 'UV' default.")
+        df.loc[df['source'] == 'zenodo_16640173', 'light_type'] = 'UV'
+        logger.info("Source Excel not found. Set Zenodo light_type to 'UV' default.")
         
     # Fill missing light_type with 'UV' based on source description fallback
     df['light_type'] = df['light_type'].fillna('UV')
@@ -195,19 +187,19 @@ def clean_and_validate(input_csv, output_csv, schema_path):
     for col in unit_cols:
         df[col] = df[col].apply(harmonize_unit)
         
-    logging.info("NaN Handling completed.")
+    logger.info("NaN Handling completed.")
     
     # 4. Data Validation against schema.json
     if not os.path.exists(schema_path):
-        logging.error(f"Schema file '{schema_path}' not found.")
-        return
+        logger.error(f"Schema file '{schema_path}' not found.")
+        return False
         
     try:
         with open(schema_path, "r", encoding="utf-8") as f:
             schema = json.load(f)
     except Exception as e:
-        logging.error(f"Failed to parse schema file: {e}")
-        return
+        logger.error(f"Failed to parse schema file: {e}")
+        return False
 
     valid_records = []
     invalid_count = 0
@@ -226,34 +218,68 @@ def clean_and_validate(input_csv, output_csv, schema_path):
             valid_records.append(row_dict)
         except jsonschema.exceptions.ValidationError as e:
             invalid_count += 1
-            logging.error(f"Row {index} failed schema validation: {e.message} | Row data: {record_to_validate}")
+            logger.error(f"Row {index} failed schema validation: {e.message} | Row data: {record_to_validate}")
             
-    logging.info(f"Validation summary: Valid rows = {len(valid_records)}, Invalid rows = {invalid_count}")
+    logger.info(f"Validation summary: Valid rows = {len(valid_records)}, Invalid rows = {invalid_count}")
     
     # Write valid rows to output CSV
     if valid_records:
         cleaned_df = pd.DataFrame(valid_records)
         
-        # Ensure column ordering matches original and puts PubChem fields after dye name
-        cols = [
-            'source_doi', 'catalyst_formula', 'dye_name', 'pubchem_cid', 'molecular_formula',
-            'initial_dye_conc_value', 'initial_dye_conc_unit', 'catalyst_dosage_value', 'catalyst_dosage_unit',
-            'light_type', 'time_value', 'time_unit', 'efficiency_value'
-        ]
-        # Only keep columns that are actually present
-        cols = [c for c in cols if c in cleaned_df.columns]
-        cleaned_df = cleaned_df[cols]
-        
-        # Ensure output directory exists
-        os.makedirs(os.path.dirname(os.path.abspath(output_csv)), exist_ok=True)
-        cleaned_df.to_csv(output_csv, index=False)
-        logging.info(f"[SUCCESS] Cleaned, normalized, and validated dataset saved to '{output_csv}'")
+        # Filter out rows where pubchem_cid is missing/NaN
+        initial_len = len(cleaned_df)
+        cleaned_df = cleaned_df.dropna(subset=['pubchem_cid'])
+        dropped_len = initial_len - len(cleaned_df)
+        if dropped_len > 0:
+            logger.warning(f"Dropped {dropped_len} rows because their dyes could not be resolved in PubChem.")
+            
+        if not cleaned_df.empty:
+            cleaned_df['pubchem_cid'] = cleaned_df['pubchem_cid'].astype(int)
+            
+            # Ensure column ordering matches original and puts PubChem fields after dye name (dropping dye_name and molecular_formula)
+            cols = [
+                'source', 'catalyst_formula', 'pubchem_cid',
+                'initial_dye_conc_value', 'initial_dye_conc_unit', 'catalyst_dosage_value', 'catalyst_dosage_unit',
+                'light_type', 'time_value', 'time_unit', 'efficiency_value'
+            ]
+            # Only keep columns that are actually present
+            cols = [c for c in cols if c in cleaned_df.columns]
+            cleaned_df = cleaned_df[cols]
+            
+            # Ensure output directory exists
+            os.makedirs(os.path.dirname(os.path.abspath(output_csv)), exist_ok=True)
+            cleaned_df.to_csv(output_csv, index=False)
+            logger.success(f"Cleaned, normalized, and validated dataset saved to '{output_csv}'")
+            return True
+        else:
+            logger.error("No rows had a valid PubChem CID. Final output file not created.")
+            return False
     else:
-        logging.error("No rows were valid. Final output file not created.")
+        logger.error("No rows were valid. Final output file not created.")
+        return False
 
 if __name__ == "__main__":
-    input_csv = "data/merged/merged.csv"
-    output_csv = "data/final_cleaned_dataset.csv"
-    schema_path = "schema.json"
+    import sys
+    import argparse
+    from utils.config import get_config_and_argv
     
-    clean_and_validate(input_csv, output_csv, schema_path)
+    config, config_path, remaining_argv = get_config_and_argv()
+    pipeline_conf = config.get("pipeline", {})
+    clean_conf = config.get("stages", {}).get("clean", {})
+    
+    # Main parser
+    parser = argparse.ArgumentParser(description="Clean, normalize, and validate dataset.")
+    parser.add_argument("--config", default="config/default.yaml", help="Path to config file")
+    parser.parse_args(remaining_argv)
+    
+    input_file = clean_conf.get("input_file", "data/merged/merged.csv")
+    output_file = clean_conf.get("output_file", "data/final_dataset.csv")
+    schema_file = pipeline_conf.get("schema_file", "schema.json")
+    cache_file = clean_conf.get("pubchem_cache_file", "data/pubchem_cache.json")
+    
+    # Update global CACHE_FILE
+    CACHE_FILE = cache_file
+    
+    success = clean_and_validate(input_file, output_file, schema_file)
+    if not success:
+        sys.exit(1)

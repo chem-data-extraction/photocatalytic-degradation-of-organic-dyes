@@ -1,7 +1,7 @@
 {
-  "source_doi": "10.1080/03067319.2024.2415175",
+  "source": "Improved photocatalytic degradation of methylene blue by novel hexagonal ZnO particles",
   "catalyst_formula": "MicNo-ZnO",
-  "dye_name": "methylene blue",
+  "dye_name": "Methylene blue",
   "initial_dye_conc_value": 10,
   "initial_dye_conc_unit": "mg/L",
   "catalyst_dosage_value": 0.25,
@@ -9,5 +9,5 @@
   "light_type": "UV",
   "time_value": 180,
   "time_unit": "min",
-  "efficiency_value": 96.04
+  "efficiency_value": 96
 }

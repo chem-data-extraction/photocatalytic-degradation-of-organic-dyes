@@ -6,50 +6,48 @@ import requests
 import re
 import json
 import time
+from utils.logger import get_logger
+from utils.env import load_dotenv
+from utils.config import load_config
 
-def load_dotenv(dotenv_path=".env"):
-    if os.path.exists(dotenv_path):
-        with open(dotenv_path, "r", encoding="utf-8") as f:
-            for line in f:
-                line = line.strip()
-                if line and not line.startswith("#"):
-                    if "=" in line:
-                        key, val = line.split("=", 1)
-                        val = val.strip()
-                        if (val.startswith('"') and val.endswith('"')) or (val.startswith("'") and val.endswith("'")):
-                            val = val[1:-1]
-                        os.environ[key.strip()] = val
+logger = get_logger("download_zenodo", "logs/download.log")
 
-def parse_args():
+CONFIG = {}
+
+def parse_args(yaml_config=None, remaining_argv=None):
+    if yaml_config is None:
+        yaml_config = {}
+    
+    download_conf = yaml_config.get("stages", {}).get("download", {})
+    
     parser = argparse.ArgumentParser(
         description="Clean minimalist script to download tabular datasets from Zenodo."
     )
     parser.add_argument(
-        "--query", "-q",
-        type=str,
-        default="photocatalytic degradation dye dataset",
-        help="Search query for Zenodo (default: 'photocatalytic degradation dye dataset')"
+        "--config",
+        default="config/default.yaml",
+        help="Path to YAML configuration file."
     )
     parser.add_argument(
-        "--output", "-o",
+        "--query", "-q",
         type=str,
-        default="data/downloaded",
-        help="Directory to save downloaded datasets (default: data/downloaded)"
+        default=download_conf.get("query", "photocatalytic degradation dye dataset"),
+        help="Search query for Zenodo."
     )
     parser.add_argument(
         "--limit", "-l",
         type=int,
-        default=10,
-        help="Maximum number of records to retrieve (default: 10)"
+        default=download_conf.get("limit", 10),
+        help="Maximum number of records to retrieve."
     )
     parser.add_argument(
-        "--filter", "-f",
+        "--filter", "-m",
         type=str,
         choices=["none", "llm", "interactive"],
-        default="interactive",
-        help="Filtering mode to exclude irrelevant datasets (default: interactive)"
+        default=download_conf.get("filter_mode", "llm"),
+        help="Filtering mode to exclude irrelevant datasets."
     )
-    return parser.parse_args()
+    return parser.parse_args(remaining_argv)
 
 def download_file(url, filepath):
     """Downloads a file with a clean console progress bar."""
@@ -57,7 +55,7 @@ def download_file(url, filepath):
         response = requests.get(url, stream=True)
         response.raise_for_status()
     except Exception as e:
-        print(f"    [ERROR] Failed to connect to download URL: {e}")
+        logger.error(f"    Failed to connect to download URL: {e}")
         return False
 
     total_size = int(response.headers.get("content-length", 0))
@@ -78,7 +76,8 @@ def download_file(url, filepath):
         print()  # New line after progress finishes
         return True
     except Exception as e:
-        print(f"\n    [ERROR] Failed writing file {filepath}: {e}")
+        print()  # New line to clear progress bar line
+        logger.error(f"    Failed writing file {filepath}: {e}")
         # Clean up partial file on failure
         if os.path.exists(filepath):
             os.remove(filepath)
@@ -87,14 +86,14 @@ def download_file(url, filepath):
 def check_relevance_llm(title, description, filenames):
     api_key = os.environ.get("GEMINI_API_KEY") or os.environ.get("GOOGLE_API_KEY")
     if not api_key:
-        print("[WARNING] GEMINI_API_KEY is not set. Cannot run LLM filtering. Bypassing check.")
+        logger.warning("GEMINI_API_KEY is not set. Cannot run LLM filtering. Bypassing check.")
         return True, "GEMINI_API_KEY not configured."
         
     try:
         from google import genai
         from google.genai import types
     except ImportError:
-        print("[WARNING] google-genai is not installed. Cannot run LLM filtering. Bypassing check.")
+        logger.warning("google-genai is not installed. Cannot run LLM filtering. Bypassing check.")
         return True, "google-genai package is not installed."
         
     try:
@@ -127,28 +126,32 @@ Files: {filenames}
             system_instruction="You are an expert scientific data classifier. Determine if a Zenodo dataset contains tabular photocatalytic dye degradation experimental data."
         )
         
-        max_retries = 5
-        retry_delay = 5
+        download_conf = CONFIG.get("stages", {}).get("download", {})
+        llm_conf = download_conf.get("llm", {})
+        model_name = llm_conf.get("metadata_model", "gemini-2.5-flash")
+        max_retries = llm_conf.get("max_retries", 5)
+        retry_delay = llm_conf.get("retry_delay", 5)
+        
         for attempt in range(1, max_retries + 1):
             try:
                 response = client.models.generate_content(
-                    model="gemini-3-flash-preview",
+                    model=model_name,
                     contents=prompt,
                     config=config
                 )
                 res = json.loads(response.text)
                 return res.get("relevant", True), res.get("reason", "No reason provided.")
             except Exception as e:
-                print(f"[WARNING] LLM relevance check failed on attempt {attempt}/{max_retries}: {e}")
+                logger.warning(f"LLM relevance check failed on attempt {attempt}/{max_retries}: {e}")
                 if attempt < max_retries:
-                    print(f"Retrying in {retry_delay} seconds...")
+                    logger.info(f"Retrying in {retry_delay} seconds...")
                     time.sleep(retry_delay)
                     retry_delay *= 2
                 else:
-                    print(f"[ERROR] All {max_retries} attempts failed for LLM relevance check. Terminating script.")
+                    logger.error(f"All {max_retries} attempts failed for LLM relevance check. Terminating script.")
                     sys.exit(1)
     except Exception as e:
-        print(f"[ERROR] Setup or client initialization for LLM relevance check failed: {e}")
+        logger.error(f"Setup or client initialization for LLM relevance check failed: {e}")
         sys.exit(1)
 
 def get_file_preview(filepath):
@@ -188,7 +191,125 @@ def get_file_preview(filepath):
             return {"error": f"Failed to parse CSV: {e}"}
     return {"error": "Unsupported file format"}
 
-def check_file_content_relevance_llm(filepath, title, description):
+def fetch_metadata_context(hit, record_dir):
+    """
+    Looks for related metadata records, downloads any protocol/metadata files,
+    and extracts text context to assist LLM mapping.
+    """
+    import pandas as pd
+    related_ids = hit.get("related_identifiers", [])
+    if not related_ids:
+        related_ids = hit.get("metadata", {}).get("related_identifiers", [])
+    context_parts = []
+    
+    for rel in related_ids:
+        identifier = rel.get("identifier", "")
+        
+        # Check relation type for metadata links
+        rel_type = rel.get("relation_type", {})
+        relation_id = ""
+        if isinstance(rel_type, dict):
+            relation_id = str(rel_type.get("id", "")).lower()
+        elif isinstance(rel_type, str):
+            relation_id = rel_type.lower()
+            
+        relation = str(rel.get("relation", "")).lower()
+        
+        if relation_id == "hasmetadata" or relation == "hasmetadata" or "metadata" in relation_id or "metadata" in relation:
+            # Extract recid using regex
+            match = re.search(r"zenodo\.(\d+)", identifier)
+            if match:
+                related_recid = match.group(1)
+            else:
+                match_digits = re.search(r"(\d+)$", identifier)
+                if match_digits:
+                    related_recid = match_digits.group(1)
+                else:
+                    continue
+            
+            logger.info(f"  Found related metadata record: {related_recid}. Fetching context...")
+            api_url = f"https://zenodo.org/api/records/{related_recid}"
+            
+            try:
+                response = requests.get(api_url, timeout=10)
+                if response.status_code == 200:
+                    data = response.json()
+                    
+                    files_entries = None
+                    files_data = data.get("files")
+                    if isinstance(files_data, dict):
+                        files_entries = files_data.get("entries", {})
+                        
+                    files_list = []
+                    if files_entries:
+                        for k, v in files_entries.items():
+                            files_list.append({
+                                "key": k,
+                                "size": v.get("size"),
+                                "download_url": v.get("links", {}).get("content")
+                            })
+                    elif isinstance(files_data, list):
+                        for f in files_data:
+                            files_list.append({
+                                "key": f.get("key") or f.get("filename"),
+                                "size": f.get("size"),
+                                "download_url": f.get("links", {}).get("self") or f.get("links", {}).get("content")
+                            })
+                    
+                    for f_info in files_list:
+                        key = f_info.get("key", "")
+                        download_url = f_info.get("download_url")
+                        if not key or not download_url:
+                            continue
+                        
+                        key_lower = key.lower()
+                        if any(kw in key_lower for kw in ["metadata", "protocol", "readme", "instruction"]) and key_lower.endswith((".xlsx", ".xls", ".txt", ".md")):
+                            dest_path = os.path.join(record_dir, key)
+                            logger.info(f"    Downloading metadata file {key}...")
+                            
+                            dl_resp = requests.get(download_url, timeout=15)
+                            if dl_resp.status_code == 200:
+                                with open(dest_path, "wb") as f_out:
+                                    f_out.write(dl_resp.content)
+                                
+                                if key_lower.endswith((".xlsx", ".xls")):
+                                    try:
+                                        xl = pd.ExcelFile(dest_path)
+                                        for sheet in xl.sheet_names:
+                                            sheet_lower = sheet.lower()
+                                            if any(kw in sheet_lower for kw in ["protocol", "method", "descriptor", "dictionary", "measurement", "measurements", "data", "info"]):
+                                                df_sheet = xl.parse(sheet)
+                                                
+                                                col_summary = []
+                                                for col in df_sheet.columns:
+                                                    col_lower = str(col).lower()
+                                                    if any(kw in col_lower for kw in ["material", "nm", "sample", "catalyst", "id", "name"]):
+                                                        try:
+                                                            unique_vals = df_sheet[col].dropna().unique()
+                                                            if len(unique_vals) <= 50:
+                                                                col_summary.append(f"  Unique values in '{col}': {list(unique_vals)}")
+                                                        except Exception:
+                                                            pass
+                                                col_summary_str = "Column Summaries:\n" + "\n".join(col_summary) + "\n" if col_summary else ""
+                                                
+                                                num_rows = 100 if any(kw in sheet_lower for kw in ["protocol", "dictionary", "method"]) else 20
+                                                sheet_text = df_sheet.head(num_rows).to_string()
+                                                context_parts.append(f"Sheet '{sheet}' in {key}:\n{col_summary_str}{sheet_text}\n")
+                                    except Exception as ex_xl:
+                                        logger.warning(f"    Failed to parse metadata Excel {key}: {ex_xl}")
+                                elif key_lower.endswith((".txt", ".md")):
+                                    try:
+                                        with open(dest_path, "r", encoding="utf-8", errors="ignore") as f_txt:
+                                            txt_content = f_txt.read(10000)
+                                            context_parts.append(f"File {key}:\n{txt_content}\n")
+                                    except Exception as ex_txt:
+                                        logger.warning(f"    Failed to read metadata text {key}: {ex_txt}")
+            except Exception as e_api:
+                logger.warning(f"  Failed to query related metadata record {related_recid}: {e_api}")
+                
+    return "\n".join(context_parts) if context_parts else None
+
+def check_file_content_relevance_llm(filepath, title, description, metadata_context=None):
     api_key = os.environ.get("GEMINI_API_KEY") or os.environ.get("GOOGLE_API_KEY")
     if not api_key:
         return True, {}, "GEMINI_API_KEY not configured."
@@ -246,11 +367,17 @@ def check_file_content_relevance_llm(filepath, title, description):
         prompt = f"""Analyze the content preview of the downloaded file '{os.path.basename(filepath)}'.
 This file belongs to the Zenodo record: "{title}"
 Description snippet: {description[:500]}
-
+"""
+        if metadata_context:
+            prompt += f"""
+Additional Metadata and Experimental Protocol Context:
+{metadata_context[:100000]}
+"""
+        prompt += f"""
 Determine if this file (or one of its sheets) is a clean, flat tabular dataset of photocatalytic dye degradation experiments that is suitable for direct database import according to our schema by applying a column mapping.
 
 A file is SUITABLE (relevant: True) ONLY if:
-1. It contains a flat table structure where each row represents a single experimental observation/run, and columns represent distinct variables.
+1. It contains a table structure where each row represents a single experimental observation/run, and columns represent distinct variables.
 2. It has a clear, unique mapping to our target fields (e.g. one unique column for Time, and one unique column for Degradation Efficiency or Concentration).
 
 A file is UNSUITABLE (relevant: False) and MUST be rejected if:
@@ -263,14 +390,16 @@ If the file is SUITABLE, identify the columns that map to the target fields:
 - column_mapping: a dictionary mapping each schema field to the corresponding column name in the dataset (or null / constant). Specifically:
   - catalyst_formula: column name for catalyst formula if present.
   - dye_name: column name for dye name if present.
-  - initial_dye_conc_value: column name for initial dye concentration value if present.
-  - initial_dye_conc_unit: column name for initial dye concentration unit, or a constant like 'mg/L' if not in columns.
-  - catalyst_dosage_value: column name for catalyst dosage value if present.
-  - catalyst_dosage_unit: column name for catalyst dosage unit, or a constant like 'g/L' if not in columns.
+  - initial_dye_conc_value: column name for initial dye concentration value, or if missing as a column, check the metadata/experimental protocol context. Look specifically at the pollutant/dye degradation experiment description (e.g., "used 150 mL of 7 ppm RhB solution"). Avoid general characterization sample preparation ranges (like "10-100 mg/L" meant for DLS/ELS). Convert concentrations to mg/L (1 ppm = 1 mg/L) and specify it as a numeric constant string (e.g. "7.0").
+  - initial_dye_conc_unit: column name for initial dye concentration unit, or a constant like 'mg/L' if not in columns but specified in the context.
+  - catalyst_dosage_value: column name for catalyst dosage value, or if missing as a column, check the metadata/experimental protocol context. Check both the degradation protocol description and the measurements data sheet for catalyst concentration/dosage references. For example, if it specifies a constant dosage (like "0.1 g/L", "100 mg/L", or "15 mg in 150 mL" which is 0.1 g/L), or if the measurements sheet has materials named like "TiO2:SiO2 0.1 g/L Fotoc" indicating a 0.1 g/L concentration, you MUST set this field to that constant numeric value as a string (e.g. "0.1"). Avoid using characterization sample preparation ranges like "10-100 mg/L".
+  - catalyst_dosage_unit: column name for catalyst dosage unit, or a constant like 'g/L' if not in columns but specified in the context.
   - light_type: column name for light condition/type if present.
   - time_value: column name containing the time values.
   - time_unit: column name containing the time unit, or a constant like 'min', 'hours', 's' if not in columns.
   - efficiency_value: column name containing degradation efficiency (0-100%) or concentration ratio.
+
+CRITICAL INSTRUCTION: If a field is not present as a column in the data preview, but its constant experimental value is described in the provided Metadata/Protocol Context, you MUST map it directly to that constant value (e.g. "7.0" or "0.1") instead of null. Do NOT output range strings like "10-100" as a value. Use only a single, specific constant number.
 
 File structure preview (first few rows of each sheet/data):
 {json.dumps(preview, indent=2)}
@@ -281,12 +410,16 @@ File structure preview (first few rows of each sheet/data):
             system_instruction="You are a strict data validation agent. Determine if a tabular file contains a clean, flat table (not a plotting coordinate sheet with side-by-side repeated columns or raw characterization data) that is suitable for direct database import using column mapping."
         )
         
-        max_retries = 5
-        retry_delay = 5
+        download_conf = CONFIG.get("stages", {}).get("download", {})
+        llm_conf = download_conf.get("llm", {})
+        model_name = llm_conf.get("content_model", "gemini-3.1-flash-lite")
+        max_retries = llm_conf.get("max_retries", 5)
+        retry_delay = llm_conf.get("retry_delay", 5)
+        
         for attempt in range(1, max_retries + 1):
             try:
                 response = client.models.generate_content(
-                    model="gemini-3.1-flash-lite",
+                    model=model_name,
                     contents=prompt,
                     config=config
                 )
@@ -302,28 +435,28 @@ File structure preview (first few rows of each sheet/data):
                     
                 return is_relevant, mapping, reason
             except Exception as e:
-                print(f"[WARNING] LLM content relevance check failed on attempt {attempt}/{max_retries}: {e}")
+                logger.warning(f"  LLM content relevance check failed on attempt {attempt}/{max_retries}: {e}")
                 if attempt < max_retries:
-                    print(f"Retrying in {retry_delay} seconds...")
+                    logger.info(f"  Retrying in {retry_delay} seconds...")
                     time.sleep(retry_delay)
                     retry_delay *= 2
                 else:
-                    print(f"[ERROR] All {max_retries} attempts failed for LLM content relevance check. Terminating script.")
+                    logger.error(f"  All {max_retries} attempts failed for LLM content relevance check. Terminating script.")
                     sys.exit(1)
     except Exception as e:
-        print(f"[ERROR] Setup or client initialization for LLM content relevance check failed: {e}")
+        logger.error(f"  Setup or client initialization for LLM content relevance check failed: {e}")
         sys.exit(1)
 
 def ask_user_interactive(idx, total, record_id, title, description, filenames):
     clean_desc = re.sub(r"<[^>]*>", "", description).strip()
     desc_snippet = clean_desc[:200] + "..." if len(clean_desc) > 200 else clean_desc
     
-    print("=" * 60)
-    print(f"[{idx}/{total}] Record ID: {record_id}")
-    print(f"Title: {title}")
-    print(f"Description: {desc_snippet}")
-    print(f"Tabular Files: {filenames}")
-    print("-" * 60)
+    logger.plain("=" * 60)
+    logger.plain(f"[{idx}/{total}] Record ID: {record_id}")
+    logger.plain(f"Title: {title}")
+    logger.plain(f"Description: {desc_snippet}")
+    logger.plain(f"Tabular Files: {filenames}")
+    logger.plain("-" * 60)
     
     while True:
         choice = input("Download this dataset? [y]es / [n]o / [a]ll remaining / [q]uit: ").strip().lower()
@@ -336,12 +469,21 @@ def ask_user_interactive(idx, total, record_id, title, description, filenames):
         elif choice in ("q", "quit"):
             return "q"
         else:
-            print("Invalid choice. Please enter y, n, a, or q.")
+            logger.warning("Invalid choice. Please enter y, n, a, or q.")
 
 
 def main():
     load_dotenv()
-    args = parse_args()
+    
+    from utils.config import get_config_and_argv
+    global CONFIG
+    CONFIG, config_path, remaining_argv = get_config_and_argv()
+    
+    args = parse_args(CONFIG, remaining_argv)
+    
+    # Propagate output path from config back to args namespace
+    download_conf = CONFIG.get("stages", {}).get("download", {})
+    args.output = download_conf.get("output_dir", "data/downloaded")
     
     # Target tabular extensions
     allowed_extensions = (".csv", ".xlsx", ".xls", ".tsv", ".ods")
@@ -359,27 +501,27 @@ def main():
         "status": "published"
     }
     
-    print(f"[*] Querying Zenodo API...")
-    print(f"[-] Search term: {args.query}")
-    print(f"[-] Output directory: {args.output}")
-    print(f"[-] Record limit: {args.limit}")
-    print(f"[-] Filter: {args.filter}\n")
+    logger.info("Querying Zenodo API...")
+    logger.info(f"  Search term: {args.query}")
+    logger.info(f"  Output directory: {args.output}")
+    logger.info(f"  Record limit: {args.limit}")
+    logger.info(f"  Filter: {args.filter}\n")
     
     try:
         response = requests.get(api_url, params=params)
         response.raise_for_status()
     except Exception as e:
-        print(f"[ERROR] Failed to query Zenodo API: {e}")
+        logger.error(f"Failed to query Zenodo API: {e}")
         sys.exit(1)
         
     results = response.json()
     hits = results.get("hits", {}).get("hits", [])
     
     if not hits:
-        print("[!] No records found matching the query.")
+        logger.warning("No records found matching the query.")
         sys.exit(0)
         
-    print(f"[+] Found {len(hits)} dataset records. Starting download of tabular files...\n")
+    logger.success(f"Found {len(hits)} dataset records. Starting download of tabular files...\n")
     
     os.makedirs(args.output, exist_ok=True)
     
@@ -415,7 +557,7 @@ def main():
         elif args.filter == "interactive":
             action = ask_user_interactive(idx, len(hits), record_id, title, description, filenames)
             if action == "q":
-                print("[*] Exiting download script.")
+                logger.info("Exiting download script.")
                 break
             elif action == "n":
                 is_relevant = False
@@ -425,21 +567,24 @@ def main():
                 is_relevant = True
             else:
                 is_relevant = True
-
+ 
         if not is_relevant:
-            print(f"[{idx}/{len(hits)}] Skipping Record ID: {record_id} - {title[:50]}...")
-            print(f"    Reason: {skip_reason}")
-            print("-" * 50)
+            logger.info(f"[{idx}/{len(hits)}] Skipping Record ID: {record_id} - {title[:50]}...")
+            logger.info(f"    Reason: {skip_reason}")
+            logger.plain("-" * 50)
             continue
             
-        print(f"[{idx}/{len(hits)}] Processing Record ID: {record_id}")
-        print(f"    Title: {title}")
-        print(f"    Found {len(tabular_files)} tabular file(s).")
+        logger.info(f"[{idx}/{len(hits)}] Processing Record ID: {record_id}")
+        logger.info(f"    Title: {title}")
+        logger.info(f"    Found {len(tabular_files)} tabular file(s).")
         
         # Create record-specific subdirectory to avoid naming conflicts
         record_dir = os.path.join(args.output, f"zenodo_{record_id}")
         os.makedirs(record_dir, exist_ok=True)
         
+        # Fetch metadata context (e.g. protocols/dictionaries) from related records if any
+        metadata_context = fetch_metadata_context(hit, record_dir)
+
         record_has_downloads = False
         downloaded_paths = []
         for f_info in tabular_files:
@@ -450,32 +595,33 @@ def main():
                 continue
                 
             dest_path = os.path.join(record_dir, filename)
-            print(f"  -> Downloading {filename}...")
+            logger.info(f"  Downloading {filename}...")
             
             success = download_file(download_url, dest_path)
             if success:
                 # Stage 2 validation check on the downloaded file content
                 if args.filter == "llm":
-                    print(f"  [+] Inspecting file content for relevance...")
-                    is_rel, mapping, reason = check_file_content_relevance_llm(dest_path, title, description)
+                    logger.info("  Inspecting file content for relevance...")
+                    is_rel, mapping, reason = check_file_content_relevance_llm(dest_path, title, description, metadata_context)
                     if not is_rel:
-                        print(f"    [!] File {filename} is IRRELEVANT after content inspection: {reason}")
-                        print(f"    [-] Deleting {filename}.")
+                        logger.warning(f"    File {filename} is IRRELEVANT after content inspection: {reason}")
+                        logger.info(f"    Deleting {filename}.")
                         try:
                             os.remove(dest_path)
                         except Exception as e:
-                            print(f"    [ERROR] Failed to delete file: {e}")
+                            logger.error(f"    Failed to delete file: {e}")
                         continue
                     else:
-                        print(f"    [+] File {filename} is RELEVANT. Reason: {reason}")
+                        logger.success(f"    File {filename} is RELEVANT. Reason: {reason}")
+
                         # Save mapping
                         mapping_path = os.path.join(record_dir, f"{filename}_mapping.json")
                         try:
                             with open(mapping_path, "w", encoding="utf-8") as f_map:
                                 json.dump(mapping, f_map, indent=2, ensure_ascii=False)
-                            print(f"    [+] Saved column mapping to: {mapping_path}")
+                            logger.success(f"    Saved column mapping to: {mapping_path}")
                         except Exception as e:
-                            print(f"    [WARNING] Failed to save mapping: {e}")
+                            logger.warning(f"    Failed to save mapping: {e}")
                 
                 downloaded_paths.append(dest_path)
                 downloaded_files_count += 1
@@ -487,13 +633,13 @@ def main():
             # Clean up empty directory if no files were kept
             try:
                 os.rmdir(record_dir)
-                print(f"  [-] Removed empty directory for record {record_id}")
+                logger.info(f"  Removed empty directory for record {record_id}")
             except Exception:
                 pass
-        print("-" * 50)
+        logger.plain("-" * 50)
         
-    print(f"\n[+] Completed! Downloaded {downloaded_files_count} files from {downloaded_records_count} datasets.")
-    print(f"[+] All files saved under: {os.path.abspath(args.output)}")
+    logger.success(f"\nCompleted! Downloaded {downloaded_files_count} files from {downloaded_records_count} datasets.")
+    logger.success(f"All files saved under: {os.path.abspath(args.output)}")
 
 if __name__ == "__main__":
     main()

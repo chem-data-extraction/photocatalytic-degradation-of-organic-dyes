@@ -1,9 +1,13 @@
 import os
+import sys
 import glob
 import json
 import csv
 import argparse
 from pathlib import Path
+from utils.logger import get_logger
+
+logger = get_logger("merge_extracted", "logs/merge.log")
 
 def to_float(val):
     import pandas as pd
@@ -22,43 +26,24 @@ def to_str(val):
     return val_str if val_str else None
 
 def main():
+    from utils.config import get_config_and_argv
+    config, config_path, remaining_argv = get_config_and_argv()
+    pipeline_conf = config.get("pipeline", {})
+    merge_conf = config.get("stages", {}).get("merge", {})
+
     parser = argparse.ArgumentParser(description="Merge extracted article JSONs and downloaded datasets into a single CSV file.")
     parser.add_argument(
-        "--input-dir", "-i",
-        default="data/extracted",
-        help="Directory containing extracted JSON files from PDFs (default: data/extracted)"
+        "--config",
+        default="config/default.yaml",
+        help="Path to config file."
     )
-    parser.add_argument(
-        "--downloaded-dir", "-d",
-        default="data/downloaded",
-        help="Directory containing downloaded Zenodo datasets (default: data/downloaded)"
-    )
-    parser.add_argument(
-        "--output-file", "-o",
-        default="data/merged/articles.csv",
-        help="Path to the output CSV file (default: data/merged/merged.csv)"
-    )
-    parser.add_argument(
-        "--schema-file", "-s",
-        default="schema.json",
-        help="Path to the schema JSON file to extract field order (default: schema.json)"
-    )
-    parser.add_argument(
-        "--no-extracted",
-        action="store_true",
-        help="Skip merging extracted PDF JSON files"
-    )
-    parser.add_argument(
-        "--no-downloaded",
-        action="store_true",
-        help="Skip merging downloaded datasets"
-    )
-    args = parser.parse_args()
+    args = parser.parse_args(remaining_argv)
 
-    input_dir = Path(args.input_dir)
-    downloaded_dir = Path(args.downloaded_dir)
-    output_file = Path(args.output_file)
-    schema_file = Path(args.schema_file)
+    # Set paths strictly from the config file
+    input_dir = Path(merge_conf.get("extracted_dir", "data/extracted"))
+    downloaded_dir = Path(merge_conf.get("downloaded_dir", "data/downloaded"))
+    output_file = Path(merge_conf.get("output_file", "data/merged/merged.csv"))
+    schema_file = Path(pipeline_conf.get("schema_file", "schema.json"))
 
     # Load fieldnames from schema to strictly enforce ordering and properties
     fieldnames = []
@@ -68,64 +53,64 @@ def main():
                 schema = json.load(f)
                 if "properties" in schema:
                     fieldnames = list(schema["properties"].keys())
-                    print(f"Loaded {len(fieldnames)} fields from schema '{schema_file}'.")
+                    logger.info(f"Loaded {len(fieldnames)} fields from schema '{schema_file}'.")
         except Exception as e:
-            print(f"[ERROR] Could not parse schema file '{schema_file}': {e}.")
-            return
+            logger.error(f"Could not parse schema file '{schema_file}': {e}.")
+            sys.exit(1)
     else:
-        print(f"[ERROR] Schema file '{schema_file}' does not exist.")
-        return
+        logger.error(f"Schema file '{schema_file}' does not exist.")
+        sys.exit(1)
 
     records = []
 
     # 1. Merge extracted PDF JSONs
-    if not args.no_extracted:
-        if input_dir.exists():
-            json_files = sorted(list(input_dir.glob("*.json")))
-            print(f"Found {len(json_files)} extracted JSON file(s) in '{input_dir}'.")
-            for file_path in json_files:
-                try:
-                    with open(file_path, "r", encoding="utf-8") as f:
-                        data = json.load(f)
-                        
-                    if isinstance(data, dict):
-                        records.append(data)
-                    elif isinstance(data, list):
-                        for item in data:
-                            if isinstance(item, dict):
-                                records.append(item)
-                    else:
-                        print(f"[WARNING] Skipping '{file_path.name}': JSON content is not a dictionary or list.")
-                except Exception as e:
-                    print(f"[ERROR] Failed to read or parse '{file_path.name}': {e}")
-        else:
-            print(f"[WARNING] Extracted PDF input directory '{input_dir}' does not exist.")
+    if input_dir.exists():
+        json_files = sorted(list(input_dir.glob("*.json")))
+        logger.info(f"Found {len(json_files)} extracted JSON file(s) in '{input_dir}'.")
+        for file_path in json_files:
+            try:
+                with open(file_path, "r", encoding="utf-8") as f:
+                    data = json.load(f)
+                    
+                if isinstance(data, dict):
+                    data["source"] = file_path.stem
+                    records.append(data)
+                elif isinstance(data, list):
+                    for item in data:
+                        if isinstance(item, dict):
+                            item["source"] = file_path.stem
+                            records.append(item)
+                else:
+                    logger.warning(f"Skipping '{file_path.name}': JSON content is not a dictionary or list.")
+            except Exception as e:
+                logger.error(f"Failed to read or parse '{file_path.name}': {e}")
+    else:
+        logger.warning(f"Extracted PDF input directory '{input_dir}' does not exist.")
 
     # 2. Merge downloaded datasets using mappings
-    if not args.no_downloaded:
-        if downloaded_dir.exists():
+    if downloaded_dir.exists():
             try:
                 import pandas as pd
             except ImportError:
-                print("[ERROR] pandas library is required to merge downloaded datasets. Please run in an environment with pandas installed.")
-                return
+                logger.error("pandas library is required to merge downloaded datasets. Please run in an environment with pandas installed.")
+                sys.exit(1)
 
             mapping_files = sorted(list(downloaded_dir.glob("**/*_mapping.json")))
-            print(f"Found {len(mapping_files)} dataset mapping file(s) in '{downloaded_dir}'.")
+            logger.info(f"Found {len(mapping_files)} dataset mapping file(s) in '{downloaded_dir}'.")
 
             for mapping_file in mapping_files:
-                print(f"Processing dataset mapping: {mapping_file}")
+                logger.info(f"Processing dataset mapping: {mapping_file}")
                 # Data file name is mapping file name without '_mapping.json'
                 data_file_path = mapping_file.parent / mapping_file.name.replace("_mapping.json", "")
                 if not data_file_path.exists():
-                    print(f"[WARNING] Data file {data_file_path} not found for mapping {mapping_file}. Skipping.")
+                    logger.warning(f"Data file {data_file_path} not found for mapping {mapping_file}. Skipping.")
                     continue
 
                 try:
                     with open(mapping_file, "r", encoding="utf-8") as f:
                         mapping = json.load(f)
                 except Exception as e:
-                    print(f"[ERROR] Failed to read mapping file {mapping_file}: {e}. Skipping.")
+                    logger.error(f"Failed to read mapping file {mapping_file}: {e}. Skipping.")
                     continue
 
                 sheet_name = mapping.get("sheet_name")
@@ -141,13 +126,13 @@ def main():
                         sep = '\t' if suffix == '.tsv' else ','
                         df = pd.read_csv(data_file_path, sep=sep)
                     else:
-                        print(f"[WARNING] Unsupported file format '{suffix}' for {data_file_path}. Skipping.")
+                        logger.warning(f"Unsupported file format '{suffix}' for {data_file_path}. Skipping.")
                         continue
                 except Exception as e:
-                    print(f"[ERROR] Failed to read data file {data_file_path}: {e}. Skipping.")
+                    logger.error(f"Failed to read data file {data_file_path}: {e}. Skipping.")
                     continue
 
-                print(f"Loaded {data_file_path.name} with {len(df)} rows.")
+                logger.info(f"Loaded {data_file_path.name} with {len(df)} rows.")
 
                 # Extract mapping dictionary (keys = schema fields, values = dataset columns)
                 col_map = mapping.get("column_mapping", {})
@@ -167,44 +152,47 @@ def main():
                 # Normalize values in mapping (map string "null" to None)
                 col_map = {k: (None if v == "null" else v) for k, v in col_map.items()}
 
-                source_doi = data_file_path.parent.name
+                source = data_file_path.parent.name
 
                 dataset_records_count = 0
                 for _, row in df.iterrows():
                     record = {field: None for field in fieldnames}
-                    record["source_doi"] = source_doi
+                    record["source"] = source
 
                     for field in fieldnames:
-                        if field == "source_doi":
+                        if field == "source":
                             continue
                             
                         mapped_col = col_map.get(field)
                         if not mapped_col:
                             continue
                             
-                        # If the mapped column exists in the dataset, extract its value
-                        if mapped_col in row:
+                        # If the mapped column exists in the dataset, extract its value.
+                        # Note: mapped_col must be a string to be a column name.
+                        if isinstance(mapped_col, str) and mapped_col in row:
                             val = row[mapped_col]
                             if field.endswith("_value"):
                                 record[field] = to_float(val)
                             else:
                                 record[field] = to_str(val)
                         else:
-                            # If mapped column is not in columns, check if it's a constant
-                            # Constants are typically non-value fields (e.g. units like "min" or "mg/L")
-                            if not field.endswith("_value"):
-                                record[field] = to_str(mapped_col)
+                            # If mapped column is not in columns, treat it as a constant value or unit
+                            if mapped_col is not None:
+                                if field.endswith("_value"):
+                                    record[field] = to_float(mapped_col)
+                                else:
+                                    record[field] = to_str(mapped_col)
 
                     records.append(record)
                     dataset_records_count += 1
                 
-                print(f"Extracted {dataset_records_count} records from {data_file_path.name}.")
-        else:
-            print(f"[WARNING] Downloaded datasets directory '{downloaded_dir}' does not exist.")
+                logger.info(f"Extracted {dataset_records_count} records from {data_file_path.name}.")
+    else:
+        logger.warning(f"Downloaded datasets directory '{downloaded_dir}' does not exist.")
 
     if not records:
-        print("[WARNING] No valid data records were merged.")
-        return
+        logger.warning("No valid data records were merged.")
+        sys.exit(1)
 
     # Ensure output directory exists
     output_file.parent.mkdir(parents=True, exist_ok=True)
@@ -216,9 +204,9 @@ def main():
             writer.writeheader()
             for record in records:
                 writer.writerow(record)
-        print(f"[SUCCESS] Merged {len(records)} records into '{output_file}'.")
+        logger.success(f"Merged {len(records)} records into '{output_file}'.")
     except Exception as e:
-        print(f"[ERROR] Failed to write CSV file '{output_file}': {e}")
+        logger.error(f"Failed to write CSV file '{output_file}': {e}")
 
 if __name__ == "__main__":
     main()

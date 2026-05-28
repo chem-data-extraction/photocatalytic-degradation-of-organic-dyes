@@ -1,0 +1,56 @@
+# Photocatalysis Extraction Pipeline Configuration (Default Settings)
+
+# Глобальные настройки запуска конвейера
+pipeline:
+  stages: "all"            # Список шагов для запуска через запятую (выбор из: merge-si, ingest, extract, download, merge, clean) или "all"
+  schema_file: "schema.json" # Путь к файлу схемы данных
+
+# Настройки параметров для отдельных этапов
+stages:
+  # Шаг 1: Объединение Supplementary Information PDF файлов
+  merge_si:
+    pdf_dir: "data/pdf"
+
+  # Шаг 2: Распознавание/парсинг PDF-статей через MinerU
+  ingest:
+    pdf_dir: "data/pdf"
+    ingested_dir: "data/ingested"
+    force: false                   # Принудительно перезапустить распознавание
+    extraction_model: "vlm"        # Режим MinerU: "vlm" или "pipeline"
+    enable_formula: true           # Включить распознавание формул (LaTeX)
+    enable_table: true             # Включить распознавание структуры таблиц
+    enable_ocr: false              # Принудительный OCR для сканов
+    ocr_language: "en"             # Язык распознавания OCR ("en", "zh", "auto", и др.)
+
+  # Шаг 3: Извлечение структурированных данных с помощью Gemini API
+  extract:
+    ingested_dir: "data/ingested"
+    extracted_dir: "data/extracted"
+    force: false                   # Принудительно перезапустить извлечение данных
+    model: "gemini-2.5-flash" # Модель Gemini для основного извлечения
+    max_retries: 5                 # Максимальное количество попыток запроса к API
+    retry_delay: 5                 # Задержка перед повторной попыткой (в секундах)
+
+  # Шаг 4: Загрузка и первичная фильтрация табличных датасетов с Zenodo
+  download:
+    query: "photocatalytic degradation dye dataset"
+    output_dir: "data/downloaded"
+    limit: 10
+    filter_mode: "llm"             # Режим фильтрации: "none", "llm" или "interactive"
+    llm:
+      metadata_model: "gemini-2.5-flash"  # Модель для фильтрации метаданных
+      content_model: "gemini-3.1-flash-lite"    # Модель для валидации структуры таблиц
+      max_retries: 5
+      retry_delay: 5
+
+  # Шаг 5: Слияние извлеченных из статей JSON-файлов и загруженных с Zenodo датасетов
+  merge:
+    extracted_dir: "data/extracted"
+    downloaded_dir: "data/downloaded"
+    output_file: "data/merged/merged.csv"
+
+  # Шаг 6: Очистка, обогащение через PubChem API и валидация схемы
+  clean:
+    input_file: "data/merged/merged.csv"
+    output_file: "data/final_cleaned_dataset.csv"
+    pubchem_cache_file: "data/pubchem_cache.json"
