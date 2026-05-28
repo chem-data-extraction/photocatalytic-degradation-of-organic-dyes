@@ -1,0 +1,13 @@
+{
+  "source_doi": "10.1016/j.arabjc.2022.103722",
+  "catalyst_formula": "Co3O4-Bi2O3",
+  "dye_name": "Rhodamine B",
+  "initial_dye_conc_value": 100.0,
+  "initial_dye_conc_unit": "mg/L",
+  "catalyst_dosage_value": 0.05,
+  "catalyst_dosage_unit": "g",
+  "light_type": "Visible",
+  "time_value": 120.0,
+  "time_unit": "min",
+  "efficiency_value": 92.0
+}

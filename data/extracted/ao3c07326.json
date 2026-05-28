@@ -1,0 +1,13 @@
+{
+  "source_doi": "10.1021/acsomega.3c07326",
+  "catalyst_formula": "Mg-Al LDH@g-C3N430@Ag3PO45",
+  "dye_name": "methylene blue",
+  "initial_dye_conc_value": 10,
+  "initial_dye_conc_unit": "mg L-1",
+  "catalyst_dosage_value": 0.05,
+  "catalyst_dosage_unit": "g",
+  "light_type": "Visible",
+  "time_value": 45,
+  "time_unit": "min",
+  "efficiency_value": 99
+}

@@ -1,0 +1,13 @@
+{
+  "source_doi": "10.1155/2026/8390632",
+  "catalyst_formula": "Mg-doped Ag2O",
+  "dye_name": "methyl orange",
+  "initial_dye_conc_value": 30.0,
+  "initial_dye_conc_unit": "ppm",
+  "catalyst_dosage_value": 0.4,
+  "catalyst_dosage_unit": "g",
+  "light_type": "UV",
+  "time_value": 150.0,
+  "time_unit": "min",
+  "efficiency_value": 96.1
+}

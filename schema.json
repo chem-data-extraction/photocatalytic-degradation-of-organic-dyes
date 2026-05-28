@@ -1,0 +1,73 @@
+{
+  "type": "object",
+  "required": [
+    "time_value",
+    "time_unit",
+    "efficiency_value"
+  ],
+  "properties": {
+    "source_doi": {
+      "type": "string"
+    },
+    "catalyst_formula": {
+      "type": "string"
+    },
+    "dye_name": {
+      "type": "string"
+    },
+    "initial_dye_conc_value": {
+      "type": [
+        "number",
+        "null"
+      ]
+    },
+    "initial_dye_conc_unit": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "catalyst_dosage_value": {
+      "type": [
+        "number",
+        "null"
+      ]
+    },
+    "catalyst_dosage_unit": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "light_type": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "enum": [
+        "UV",
+        "Visible",
+        "Solar",
+        "LED",
+        "Dark",
+        null
+      ]
+    },
+    "time_value": {
+      "type": "number"
+    },
+    "time_unit": {
+      "type": "string",
+      "enum": [
+        "min",
+        "hours",
+        "s"
+      ]
+    },
+    "efficiency_value": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 100
+    }
+  }
+}

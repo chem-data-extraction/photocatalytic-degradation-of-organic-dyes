@@ -1,0 +1,15 @@
+{
+  "sheet_name": "9. Descriptors",
+  "column_mapping": {
+    "catalyst_formula": "NMs_ID",
+    "dye_name": "Reactive  Molecule ",
+    "initial_dye_conc_value": null,
+    "initial_dye_conc_unit": null,
+    "catalyst_dosage_value": null,
+    "catalyst_dosage_unit": null,
+    "light_type": " Light Condition",
+    "time_value": "Exposure duration_min",
+    "time_unit": "min",
+    "efficiency_value": "Eff_%"
+  }
+}

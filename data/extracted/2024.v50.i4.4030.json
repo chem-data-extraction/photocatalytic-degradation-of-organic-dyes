@@ -1,0 +1,13 @@
+{
+  "source_doi": "10.1080/03067319.2024.2415175",
+  "catalyst_formula": "MicNo-ZnO",
+  "dye_name": "methylene blue",
+  "initial_dye_conc_value": 10,
+  "initial_dye_conc_unit": "mg/L",
+  "catalyst_dosage_value": 0.25,
+  "catalyst_dosage_unit": "g/L",
+  "light_type": "UV",
+  "time_value": 180,
+  "time_unit": "min",
+  "efficiency_value": 96.04
+}
