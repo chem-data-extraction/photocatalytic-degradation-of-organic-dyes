@@ -1,60 +1,55 @@
 # Photocatalysis Extraction Pipeline Configuration (Default Settings)
 
-# Глобальные настройки запуска конвейера
+# Global pipeline configuration
 pipeline:
-  stages: "all"            # Список шагов для запуска через запятую (выбор из: merge-si, ingest, extract, download, merge, clean) или "all"
-  schema_file: "schemas/schema.json" # Путь к файлу схемы данных
+  stages: "all"            # List of stages to run (extract-pdf, extract-web, build, clean, validate) or "all"
+  schema_file: "specs/dataset_schema.json" # Path to data schema file
 
-# Настройки параметров для отдельных этапов
+# Parameter configurations for individual stages
 stages:
-  # Шаг 1: Объединение Supplementary Information PDF файлов
+  # Stage 1: Merge Supplementary Information PDF files (run inside extract-pdf)
   merge_si:
     pdf_dir: "data/raw/pdf"
     output_pdf_dir: "data/interim/pdf"
 
-  # Шаг 2: Распознавание/парсинг PDF-статей через MinerU
+  # Stage 2: Parse PDF layout using MinerU (run inside extract-pdf)
   ingest:
     pdf_dir: "data/interim/pdf"
     ingested_dir: "data/interim/ingested"
-    force: false                   # Принудительно перезапустить распознавание
-    extraction_model: "vlm"        # Режим MinerU: "vlm" или "pipeline"
-    enable_formula: true           # Включить распознавание формул (LaTeX)
-    enable_table: true             # Включить распознавание структуры таблиц
-    enable_ocr: false              # Принудительный OCR для сканов
-    ocr_language: "en"             # Язык распознавания OCR ("en", "zh", "auto", и др.)
+    force: false                   # Force layout preview generation
+    extraction_model: "vlm"        # MinerU mode: "vlm" or "pipeline"
+    enable_formula: true           # Enable LaTeX equation parsing
+    enable_table: true             # Enable table structure detection
+    enable_ocr: false              # Force OCR for scans
+    ocr_language: "en"             # OCR language
 
-  # Шаг 3: Извлечение структурированных данных с помощью Gemini API
+  # Stage 3: Extract structured parameters using Gemini API (run inside extract-pdf)
   extract:
     ingested_dir: "data/interim/ingested"
     extracted_dir: "data/interim/extracted"
-    force: false                   # Принудительно перезапустить извлечение данных
-    model: "gemini-2.5-flash" # Модель Gemini для основного извлечения
-    max_retries: 5                 # Максимальное количество попыток запроса к API
-    retry_delay: 5                 # Задержка перед повторной попыткой (в секундах)
+    force: false                   # Force Gemini re-extraction
+    model: "gemini-2.5-flash"      # Model to use for extraction
+    max_retries: 5
+    retry_delay: 5
 
-  # Шаг 4: Загрузка и первичная фильтрация табличных датасетов с Zenodo
+  # Stage 4: Download and filter datasets from Zenodo (run inside extract-web)
   download:
     query: "photocatalytic degradation dye dataset"
-    output_dir: "data/raw/downloaded"
+    output_dir: "data/raw/external"
     limit: 10
-    filter_mode: "llm"             # Режим фильтрации: "none", "llm" или "interactive"
+    filter_mode: "llm"             # Filter modes: "none", "llm", "interactive"
     llm:
-      metadata_model: "gemini-2.5-flash"  # Модель для фильтрации метаданных
-      content_model: "gemini-3.1-flash-lite"    # Модель для валидации структуры таблиц
+      metadata_model: "gemini-2.5-flash"  # Model for metadata relevance
+      content_model: "gemini-3.1-flash-lite"    # Model for dataset preview relevance
       max_retries: 5
       retry_delay: 5
 
-  # Шаг 5: Слияние извлеченных из статей JSON-файлов и загруженных с Zenodo датасетов
-  merge:
-    extracted_dir: "data/interim/extracted"
-    downloaded_dir: "data/raw/downloaded"
-    output_file: "data/interim/merged/merged.csv"
-
-  # Шаг 6: Очистка, обогащение через PubChem API и валидация схемы
+  # Stage 5: Clean, PubChem enrich, and validate dataset
   clean:
-    input_file: "data/interim/merged/merged.csv"
-    output_file: "data/processed/final_cleaned_dataset.csv"
+    input_file: "data/interim/merged_records.csv"
+    output_file: "data/processed/dataset.csv"
     pubchem_cache_file: "data/interim/pubchem_cache.json"
-    units_file: "metadata/units.csv"
-    vocabularies_file: "metadata/vocabularies.csv"
+    units_file: "specs/units.json"
+    vocabularies_file: "specs/vocabularies.json"
     reports_dir: "reports"
+

@@ -1,0 +1,55 @@
+{
+  "pipeline_version": "0.1.0",
+  "inputs": [
+    "data/extracted/pdf_extracted_records.csv",
+    "data/extracted/web_extracted_records.csv"
+  ],
+  "output": "data/processed/dataset.csv",
+  "steps": [
+    {
+      "step_id": "merge_sources",
+      "operation": "concatenate",
+      "description": "Combine PDF- and web-extracted CSV files into a single interim table.",
+      "input_files": [
+        "data/extracted/pdf_extracted_records.csv",
+        "data/extracted/web_extracted_records.csv"
+      ],
+      "output_file": "data/interim/merged_records.csv"
+    },
+    {
+      "step_id": "normalize_units",
+      "operation": "unit_conversion",
+      "description": "Harmonize concentration, dosage, and time units using specs/units.json mapping.",
+      "fields": ["initial_dye_concentration_unit", "catalyst_dosage_unit", "irradiation_time_unit"],
+      "output_file": "data/interim/merged_records.csv"
+    },
+    {
+      "step_id": "enrich_dye_pubchem",
+      "operation": "api_enrichment",
+      "description": "Map dye names to official preferred names, CIDs, and molecular formulas using PubChem REST API.",
+      "fields": ["dye_name"],
+      "output_file": "data/interim/merged_records.csv"
+    },
+    {
+      "step_id": "standardize_missing_values",
+      "operation": "missing_value_cleanup",
+      "description": "Map empty strings, N/A, None to actual null values for database export.",
+      "fields": ["catalyst_band_gap_ev", "catalyst_surface_area_m2g", "catalyst_particle_size_nm", "notes"],
+      "output_file": "data/interim/merged_records.csv"
+    },
+    {
+      "step_id": "validate_schema",
+      "operation": "validation",
+      "description": "Run rules in specs/validation_rules.json via scripts/validate_project.py.",
+      "input_files": ["data/processed/dataset.csv"],
+      "output_file": "reports/validation_report.md"
+    },
+    {
+      "step_id": "export_final_dataset",
+      "operation": "export",
+      "description": "Write schema-aligned columns to the final dataset CSV.",
+      "input_files": ["data/interim/merged_records.csv"],
+      "output_file": "data/processed/dataset.csv"
+    }
+  ]
+}

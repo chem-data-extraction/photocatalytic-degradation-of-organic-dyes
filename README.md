@@ -21,31 +21,38 @@ The repository architecture strictly complies with reproducibility and data stan
 ├── run_pipeline.py        # Main orchestrator script to run the pipeline
 ├── config/
 │   └── default.yaml       # Global configuration file for parameters and paths
-├── schemas/
-│   ├── schema.json        # JSON schema of the data structure for validation
-│   └── schema.yaml        # YAML equivalent of the data structure schema
-├── metadata/              # Controlled vocabulary and unit dictionaries
-│   ├── units.csv          # Reference and mapping of measurement units
-│   └── vocabularies.csv   # Vocabulary mapping dye trivial names to formal names
+├── specs/                 # JSON schemas, source map, manifests, pipeline, and dictionaries
+│   ├── dataset_schema.json # JSON schema of the data structure for validation
+│   ├── source_map.json    # Map of all data sources and IDs
+│   ├── pdf_extraction_manifest.json # PDF extraction configuration
+│   ├── web_extraction_manifest.json # Web extraction configuration
+│   ├── cleaning_pipeline.json # Configuration of processing steps
+│   ├── validation_rules.json # Custom rules for validation
+│   ├── units.json         # Reference and mapping of measurement units (JSON)
+│   └── vocabularies.json  # Vocabulary mapping dye trivial names to formal names (JSON)
 ├── data/                  # Data storage, split by processing stages
 │   ├── raw/               # READ-ONLY: original raw files
 │   │   ├── pdf/           # Original scientific articles in PDF format
-│   │   └── downloaded/    # Raw datasets downloaded from Zenodo
+│   │   ├── web/           # HTML snapshots, saved pages, or API responses
+│   │   └── external/      # Third-party CSV, ZIP, or database exports (Zenodo, etc.)
+│   ├── extracted/         # Consolidated extraction outputs
+│   │   ├── pdf_extracted_records.csv  # Extracted records from PDFs
+│   │   ├── web_extracted_records.csv  # Extracted records from Web/Zenodo
+│   │   └── extraction_log.jsonl       # Log of extraction events
 │   ├── interim/           # Interim partially preprocessed files
-│   │   ├── pdf/           # Outputs from merge-si (merged PDFs)
+│   │   ├── pdf/           # Outputs from merge-si stage
 │   │   ├── ingested/      # Recognized text and layout from MinerU (Markdown)
-│   │   ├── extracted/     # Extracted JSON files via Gemini API
-│   │   ├── merged/        # Merged raw table (merged.csv)
+│   │   ├── extracted/     # Individual extracted JSON files via Gemini API
+│   │   ├── merged_records.csv # Merged raw table (before final cleaning)
 │   │   └── pubchem_cache.json # Cache of PubChem API queries to optimize rate limits
 │   └── processed/         # Final validated and standardized dataset
-│       └── final_cleaned_dataset.csv  # Final published product
+│       └── dataset.csv    # Final publication-ready dataset
 ├── scripts/               # Data processing pipelines
-│   ├── merge_si.py        # Merging main articles with Supplementary Information (SI) files
-│   ├── ingest.py          # Parsing PDF file structure and text (MinerU)
-│   ├── extract.py         # Semantic data extraction (Gemini LLM)
-│   ├── download_zenodo.py # Searching, downloading, and filtering datasets from Zenodo
-│   ├── merge_extracted.py # Merging extracted JSONs and downloaded tables
-│   ├── clean_and_validate.py # Dataset cleaning, normalization, and validation by schema
+│   ├── extract_pdf.py     # PDF merging, layout analysis, and Gemini extraction
+│   ├── extract_web.py     # Zenodo dataset downloader and consolidation
+│   ├── build_dataset.py   # Combines PDF and Web extracted CSVs
+│   ├── clean_dataset.py   # Cleans, enriches via PubChem, and normalizes
+│   ├── validate_project.py # Checks database structure against schemas
 │   └── utils/             # Helper modules (logger, config, environment)
 └── reports/               # Folder for data quality reports
     ├── validation_report.md # Report on validation results against the schema
@@ -60,51 +67,51 @@ The final dataset is created through a reproducible step-by-step processing pipe
 
 ```mermaid
 graph TD
-    A[data/raw/pdf] -->|merge-si| B[data/interim/pdf]
-    B -->|ingest| C[data/interim/ingested]
-    C -->|extract| D[data/interim/extracted]
-    E[Zenodo API] -->|download| F[data/raw/downloaded]
-    D -->|merge| G[data/interim/merged/merged.csv]
-    F -->|merge| G
-    G -->|clean & validate| H[data/processed/final_cleaned_dataset.csv]
+    A[data/raw/pdf] -->|extract_pdf.py| B[data/extracted/pdf_extracted_records.csv]
+    C[data/raw/external] -->|extract_web.py| D[data/extracted/web_extracted_records.csv]
+    B -->|build_dataset.py| E[data/interim/merged_records.csv]
+    D -->|build_dataset.py| E
+    E -->|clean_dataset.py| F[data/processed/dataset.csv]
 ```
 
 ### Processing Steps:
-1. **`merge-si`**: Locates supplementary material files (`*_si.pdf`) in `data/raw/pdf` and merges them with the main article text in `data/interim/pdf`. The original raw files remain unmodified.
-2. **`ingest`**: Uses MinerU to convert PDFs into Markdown, extracting tables and layout structures.
-3. **`extract`**: Employs the `gemini-2.5-flash` model to extract experimental data points from text and tables in accordance with a JSON schema.
-4. **`download`**: Queries Zenodo and downloads suitable tabular datasets to `data/raw/downloaded`, utilizing an LLM to filter out irrelevant content.
-5. **`merge`**: Merges locally extracted JSONs with Zenodo tables based on generated column mappings.
-6. **`clean`**: Performs unit cleaning using the `metadata/units.csv` vocabulary, maps dye names from trivial names to official terms using `metadata/vocabularies.csv` and the PubChem API (caching queries in `data/interim/pubchem_cache.json`), filters out rows without a valid CID, and validates compliance with the JSON schema.
+1. **`extract_pdf.py`**: Merges supplementary documents, analyzes PDF layout via MinerU, extracts parameters via Gemini API, and outputs consolidated records to `data/extracted/pdf_extracted_records.csv` and individual JSON files to `data/interim/extracted/`.
+2. **`extract_web.py`**: Queries and downloads Zenodo tabular datasets to `data/raw/external`, filters records, and outputs consolidated records to `data/extracted/web_extracted_records.csv`.
+3. **`build_dataset.py`**: Merges PDF and Web extraction tables into a single schema-compliant `data/interim/merged_records.csv`.
+4. **`clean_dataset.py`**: Performs unit normalization, maps dye names via PubChem API, resolves conflicts, filters invalid rows, and saves the final output to `data/processed/dataset.csv`.
 
 *Reproducibility:* All stochastic processes (such as LLM generation temperature) are fixed in scripts via API parameters.
 
 ---
 
 ## 4. Data schema and columns
-Each row of the final dataset `data/processed/final_cleaned_dataset.csv` represents a single measurement of degradation efficiency at a specific point in time within one experiment.
+Each row of the final dataset `data/processed/dataset.csv` represents a single measurement of degradation efficiency at a specific point in time within one experiment.
 
 | Column Name | Data Type | Required? | Description | Example |
 | :--- | :--- | :---: | :--- | :--- |
-| `source` | String | No | Source identifier (article DOI or Zenodo ID) | `ao3c07326` |
-| `catalyst_formula` | String | No | Chemical formula of the photocatalyst | `TiO2` |
-| `pubchem_cid` | Integer | **Yes** | Official PubChem Compound ID of the dye | `6099` |
-| `initial_dye_conc_value` | Number | No | Initial concentration of the dye | `10.0` |
-| `initial_dye_conc_unit` | String | No | Initial dye concentration unit (converted to `mg/L`) | `mg/L` |
+| `source_id` | String | No | Source identifier (article DOI or Zenodo ID) | `ao3c07326` |
+| `catalyst` | String | No | Composition of the photocatalyst used | `Mg-doped Ag2O` |
+| `catalyst_band_gap_ev` | Number | No | Band gap of the photocatalyst in eV | `2.6` |
+| `catalyst_surface_area_m2g` | Number | No | Specific surface area of the photocatalyst in m²/g | `50.2` |
+| `catalyst_particle_size_nm` | Number | No | Particle size / diameter of the photocatalyst in nm | `23.87` |
+| `dye_name` | String | No | Normalized preferred name of the dye (from PubChem) | `Rhodamine B` |
+| `dye_pubchem_cid` | Integer | **Yes** | Official PubChem Compound ID of the dye | `6099` |
+| `initial_dye_concentration_value` | Number | No | Initial concentration of the dye | `10.0` |
+| `initial_dye_concentration_unit` | String | No | Initial dye concentration unit (converted to `mg/L`) | `mg/L` |
 | `catalyst_dosage_value` | Number | No | Photocatalyst dosage/concentration | `0.25` |
 | `catalyst_dosage_unit` | String | No | Catalyst dosage unit (converted to `g/L`) | `g/L` |
 | `light_type` | String | No | Type of radiation (`UV`, `Visible`, `Solar`, `LED`, `Dark`) | `Visible` |
-| `time_value` | Number | **Yes** | Time elapsed since the start of irradiation | `120.0` |
-| `time_unit` | String | **Yes** | Time unit (converted to `min`, `hours`, `s`) | `min` |
-| `efficiency_value` | Number | **Yes** | Degradation efficiency (%) within the range of 0-100 | `95.5` |
+| `irradiation_time_value` | Number | **Yes** | Time elapsed since the start of irradiation | `120.0` |
+| `irradiation_time_unit` | String | **Yes** | Time unit (converted to `min`, `hours`, `s`) | `min` |
+| `degradation_efficiency_percent` | Number | **Yes** | Degradation efficiency (%) within the range of 0-100 | `95.5` |
 
 ---
 
 ## 5. Units and controlled vocabularies
 External reference dictionaries are used to eliminate discrepancies in physical and chemical data:
-*   **Measurement units (`metadata/units.csv`)**: Contains mappings of various unit representations to standardized formats. For example, `ppm`, `mg l-1`, `mg/l` are normalized to a strict `mg/L`.
-*   **Dye names dictionary (`metadata/vocabularies.csv`)**: Maps abbreviations to full names (e.g., `rhb` -> `rhodamine b`, `mb` -> `methylene blue`).
-*   **PubChem API**: Allows verifying the dye by name, retrieving its structural formula and a single identifier (`pubchem_cid`), and filtering out non-existent or incorrectly recognized compounds.
+*   **Measurement units (`specs/units.json`)**: Contains mappings of various unit representations to standardized formats. For example, `ppm`, `mg l-1`, `mg/l` are normalized to a strict `mg/L`.
+*   **Dye names dictionary (`specs/vocabularies.json`)**: Maps abbreviations to full names (e.g., `rhb` -> `rhodamine b`, `mb` -> `methylene blue`).
+*   **PubChem API**: Allows verifying the dye by name, retrieving its structural formula and a single identifier (`dye_pubchem_cid`), and filtering out non-existent or incorrectly recognized compounds.
 
 ---
 
@@ -155,7 +162,7 @@ pip install -r requirements.txt
 The final dataset can be easily loaded using the pandas library:
 ```python
 import pandas as pd
-df = pd.read_csv("data/processed/final_cleaned_dataset.csv")
+df = pd.read_csv("data/processed/dataset.csv")
 print(df.head())
 ```
 
@@ -191,6 +198,6 @@ When using this dataset or code in scientific publications, please cite it in ac
     *   Created the basic pipeline structure and integration with Gemini API.
 *   **`v1.0`** (Release version):
     *   Implemented strict directory structure: `raw/`, `interim/`, `processed/`.
-    *   Introduced metadata standardization (`units.csv`, `vocabularies.csv`).
+    *   Introduced metadata standardization (`units.json`, `vocabularies.json` in specs).
     *   Added automatic validation reports (`reports/`).
     *   Created academic files `CITATION.cff` and `LICENSE`.
