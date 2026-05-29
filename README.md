@@ -1,6 +1,6 @@
 # Photocatalytic dye degradation dataset
 
-Publication-ready **dataset project** for the course *Extraction and preparation of chemical information*. Students move from a research topic to a structured, validated dataset with documented sources, extraction steps, cleaning pipeline, reports, and citation metadata.
+Publication-ready **dataset project** for the course *Extraction and preparation of chemical information*.
 
 **Project topic:** Photocatalytic degradation of organic dyes (defined in `project.json`).
 
