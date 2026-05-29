@@ -22,7 +22,6 @@ sys.path.insert(0, str(ROOT / "scripts"))
 
 from utils.logger import get_logger
 from utils.env import load_dotenv
-from utils.config import get_config_and_argv
 
 logger = get_logger("clean_dataset", "logs/cleaning.log")
 
@@ -443,27 +442,20 @@ def clean_and_validate(
 # ==============================================================================
 def main() -> None:
     load_dotenv()
-    config, config_path, remaining_argv = get_config_and_argv()
     
     parser = argparse.ArgumentParser(description="Clean, normalize, and enrich merged records.")
-    parser.add_argument("--config", default="config/default.yaml", help="Path to config file.")
-    parser.parse_args(remaining_argv)
+    parser.parse_args()
     
-    pipeline_conf = config.get("pipeline", {})
-    clean_conf = config.get("stages", {}).get("clean", {})
-    
-    input_file = ROOT / clean_conf.get("input_file", "data/interim/merged_records.csv")
-    # Redirect output directly to the template's final location
+    input_file = ROOT / "data/interim/merged_records.csv"
     output_file = ROOT / "data/processed/dataset.csv"
     template_schema = ROOT / "specs/dataset_schema.json"
     
     global CACHE_FILE
-    cache_path = clean_conf.get("pubchem_cache_file", "data/interim/pubchem_cache.json")
-    CACHE_FILE = ROOT / cache_path
+    CACHE_FILE = ROOT / "data/interim/pubchem_cache.json"
     
-    units_file = ROOT / clean_conf.get("units_file", "specs/units.json")
-    vocabularies_file = ROOT / clean_conf.get("vocabularies_file", "specs/vocabularies.json")
-    reports_dir = ROOT / clean_conf.get("reports_dir", "reports")
+    units_file = ROOT / "specs/units.json"
+    vocabularies_file = ROOT / "specs/vocabularies.json"
+    reports_dir = ROOT / "reports"
     
     success = clean_and_validate(
         input_csv=input_file,

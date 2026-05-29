@@ -1,0 +1,22 @@
+{
+  "project_id": "photocatalysis_dye_degradation",
+  "project_title": "Photocatalytic dye degradation dataset",
+  "project_status": "active",
+  "scientific_task": "Collect experimentally reported photocatalytic dye degradation measurements to compare degradation efficiency under different conditions and catalyst parameters.",
+  "record_definition": {
+    "one_record": "One experimentally reported dye degradation measurement from a specific source under a specific set of reaction conditions."
+  },
+  "main_entities": [
+    "catalyst",
+    "dye",
+    "reaction_conditions",
+    "degradation_measurement",
+    "source"
+  ],
+  "final_dataset_path": "data/processed/dataset.csv",
+  "schema_path": "specs/dataset_schema.json",
+  "source_map_path": "specs/source_map.json",
+  "created_by": "arutamonofu",
+  "created_date": "2026-05-29",
+  "version": "0.1.0"
+}

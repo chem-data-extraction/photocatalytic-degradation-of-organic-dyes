@@ -1,0 +1,139 @@
+{
+  "schema_version": "0.1.0",
+  "dataset_title": "Photocatalytic dye degradation dataset",
+  "fields": [
+    {
+      "name": "record_id",
+      "type": "string",
+      "required": true,
+      "description": "Stable unique identifier for one binding measurement record.",
+      "example": "rec_photo_zenodo_16640173_0001"
+    },
+    {
+      "name": "source_id",
+      "type": "string",
+      "required": true,
+      "description": "Identifier linking to an entry in specs/source_map.json.",
+      "example": "zenodo_16640173"
+    },
+    {
+      "name": "catalyst",
+      "type": "string",
+      "required": true,
+      "description": "Composition of the photocatalyst used.",
+      "example": "TiO2"
+    },
+    {
+      "name": "catalyst_band_gap_ev",
+      "type": "number",
+      "required": false,
+      "description": "Band gap of the photocatalyst in eV.",
+      "example": 3.2
+    },
+    {
+      "name": "catalyst_surface_area_m2g",
+      "type": "number",
+      "required": false,
+      "description": "Specific surface area of the photocatalyst in m2/g.",
+      "example": 50.0
+    },
+    {
+      "name": "catalyst_particle_size_nm",
+      "type": "number",
+      "required": false,
+      "description": "Particle size / diameter of the photocatalyst in nm.",
+      "example": 21.0
+    },
+    {
+      "name": "dye_name",
+      "type": "string",
+      "required": true,
+      "description": "Standardized preferred name of the organic dye pollutant.",
+      "example": "Methylene Blue"
+    },
+    {
+      "name": "dye_pubchem_cid",
+      "type": "integer",
+      "required": true,
+      "description": "PubChem Compound ID (CID) of the dye.",
+      "example": 6099
+    },
+    {
+      "name": "molecular_formula",
+      "type": "string",
+      "required": false,
+      "description": "Molecular formula of the dye.",
+      "example": "C16H18ClN3S"
+    },
+    {
+      "name": "initial_dye_concentration_value",
+      "type": "number",
+      "required": false,
+      "description": "Initial concentration of the dye pollutant.",
+      "example": 10.0
+    },
+    {
+      "name": "initial_dye_concentration_unit",
+      "type": "string",
+      "required": false,
+      "description": "Unit of the initial dye concentration (standardized to mg/L).",
+      "example": "mg/L"
+    },
+    {
+      "name": "catalyst_dosage_value",
+      "type": "number",
+      "required": false,
+      "description": "Photocatalyst dosage or concentration in the reaction mixture.",
+      "example": 1.0
+    },
+    {
+      "name": "catalyst_dosage_unit",
+      "type": "string",
+      "required": false,
+      "description": "Unit of the catalyst dosage (standardized to g/L).",
+      "example": "g/L"
+    },
+    {
+      "name": "light_type",
+      "type": "string",
+      "required": false,
+      "description": "Type of light source used for irradiation.",
+      "example": "UV"
+    },
+    {
+      "name": "irradiation_time_value",
+      "type": "number",
+      "required": false,
+      "description": "Duration of light irradiation.",
+      "example": 60.0
+    },
+    {
+      "name": "irradiation_time_unit",
+      "type": "string",
+      "required": false,
+      "description": "Unit of irradiation time (standardized to min).",
+      "example": "min"
+    },
+    {
+      "name": "degradation_efficiency_percent",
+      "type": "number",
+      "required": false,
+      "description": "Dye degradation efficiency percentage.",
+      "example": 95.5
+    },
+    {
+      "name": "extraction_confidence",
+      "type": "string",
+      "required": false,
+      "description": "Confidence in extracted values: high, medium, low, or unknown.",
+      "example": "high"
+    },
+    {
+      "name": "notes",
+      "type": "string",
+      "required": false,
+      "description": "Free-text notes, caveats, or provenance details.",
+      "example": "Extracted from Table 1."
+    }
+  ]
+}

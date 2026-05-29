@@ -1,0 +1,137 @@
+{
+  "topic": "Photocatalytic dye degradation experiments",
+  "root_query": "photocatalytic degradation dye dataset",
+  "source_map_version": "0.1.0",
+  "source_groups": {
+    "scientific_papers": [
+      {
+        "source_id": "2024.v50.i4.4030",
+        "name": "Improved photocatalytic degradation of methylene blue by novel hexagonal ZnO particles",
+        "source_type": "journal_article",
+        "url": "https://doi.org/10.2024.example",
+        "doi": "10.2024.example",
+        "access_status": "open_access",
+        "access_method": "PDF download",
+        "access_date": "2026-05-29",
+        "license": "CC-BY-4.0",
+        "expected_data_volume": "low",
+        "estimated_records": 1,
+        "available_data_types": ["text", "tables"],
+        "expected_fields": ["catalyst", "dye_name", "initial_dye_concentration_value", "degradation_efficiency_percent"],
+        "extraction_strategy": {
+          "recommended_method": "MinerU + Gemini LLM"
+        }
+      },
+      {
+        "source_id": "8874791",
+        "name": "Photocatalytic degradation paper 8874791",
+        "source_type": "journal_article",
+        "url": "https://doi.org/10.8874791.example",
+        "doi": "10.8874791.example",
+        "access_status": "open_access",
+        "access_method": "PDF download",
+        "access_date": "2026-05-29",
+        "license": "CC-BY-4.0",
+        "expected_data_volume": "low",
+        "estimated_records": 1,
+        "available_data_types": ["text", "tables"],
+        "expected_fields": ["catalyst", "dye_name", "degradation_efficiency_percent"],
+        "extraction_strategy": {
+          "recommended_method": "MinerU + Gemini LLM"
+        }
+      },
+      {
+        "source_id": "ao3c07326",
+        "name": "Photocatalytic degradation paper ao3c07326",
+        "source_type": "journal_article",
+        "url": "https://doi.org/10.ao3c07326.example",
+        "doi": "10.ao3c07326.example",
+        "access_status": "open_access",
+        "access_method": "PDF download",
+        "access_date": "2026-05-29",
+        "license": "CC-BY-4.0",
+        "expected_data_volume": "low",
+        "estimated_records": 1,
+        "available_data_types": ["text", "tables"],
+        "expected_fields": ["catalyst", "dye_name", "degradation_efficiency_percent"],
+        "extraction_strategy": {
+          "recommended_method": "MinerU + Gemini LLM"
+        }
+      },
+      {
+        "source_id": "d6na00104a",
+        "name": "Photocatalytic degradation paper d6na00104a",
+        "source_type": "journal_article",
+        "url": "https://doi.org/10.d6na00104a.example",
+        "doi": "10.d6na00104a.example",
+        "access_status": "open_access",
+        "access_method": "PDF download",
+        "access_date": "2026-05-29",
+        "license": "CC-BY-4.0",
+        "expected_data_volume": "low",
+        "estimated_records": 1,
+        "available_data_types": ["text", "tables"],
+        "expected_fields": ["catalyst", "dye_name", "degradation_efficiency_percent"],
+        "extraction_strategy": {
+          "recommended_method": "MinerU + Gemini LLM"
+        }
+      },
+      {
+        "source_id": "j.arabjc.2022.103732",
+        "name": "Photocatalytic degradation paper j.arabjc.2022.103732",
+        "source_type": "journal_article",
+        "url": "https://doi.org/10.j.arabjc.2022.103732.example",
+        "doi": "10.j.arabjc.2022.103732.example",
+        "access_status": "open_access",
+        "access_method": "PDF download",
+        "access_date": "2026-05-29",
+        "license": "CC-BY-4.0",
+        "expected_data_volume": "low",
+        "estimated_records": 1,
+        "available_data_types": ["text", "tables"],
+        "expected_fields": ["catalyst", "dye_name", "degradation_efficiency_percent"],
+        "extraction_strategy": {
+          "recommended_method": "MinerU + Gemini LLM"
+        }
+      },
+      {
+        "source_id": "s41598-026-40207-0",
+        "name": "Photocatalytic degradation paper s41598-026-40207-0",
+        "source_type": "journal_article",
+        "url": "https://doi.org/10.s41598.example",
+        "doi": "10.s41598.example",
+        "access_status": "open_access",
+        "access_method": "PDF download",
+        "access_date": "2026-05-29",
+        "license": "CC-BY-4.0",
+        "expected_data_volume": "low",
+        "estimated_records": 1,
+        "available_data_types": ["text", "tables"],
+        "expected_fields": ["catalyst", "dye_name", "degradation_efficiency_percent"],
+        "extraction_strategy": {
+          "recommended_method": "MinerU + Gemini LLM"
+        }
+      }
+    ],
+    "zenodo_datasets": [
+      {
+        "source_id": "zenodo_16640173",
+        "name": "Photocatalytic degradation dye dataset",
+        "source_type": "database",
+        "url": "https://zenodo.org/records/16640173",
+        "doi": "10.5281/zenodo.16640173",
+        "access_status": "open_access",
+        "access_method": "Zenodo API download",
+        "access_date": "2026-05-29",
+        "license": "CC-BY-4.0",
+        "expected_data_volume": "high",
+        "estimated_records": 1000,
+        "available_data_types": ["xlsx"],
+        "expected_fields": ["catalyst", "dye_name", "degradation_efficiency_percent"],
+        "extraction_strategy": {
+          "recommended_method": "download_zenodo.py + extract_web.py mapping"
+        }
+      }
+    ]
+  }
+}

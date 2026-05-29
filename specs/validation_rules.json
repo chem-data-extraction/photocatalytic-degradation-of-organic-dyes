@@ -1,0 +1,68 @@
+{
+  "validation_version": "0.1.0",
+  "rules": [
+    {
+      "rule_id": "files_exist_core",
+      "target": "repository",
+      "rule_type": "required_files",
+      "severity": "error",
+      "description": "Core project files (project.json, schema, source map, manifests, scripts) must exist."
+    },
+    {
+      "rule_id": "dataset_csv_exists",
+      "target": "data/processed/dataset.csv",
+      "rule_type": "file_exists",
+      "severity": "error",
+      "description": "Final processed dataset CSV must exist."
+    },
+    {
+      "rule_id": "record_id_not_null",
+      "target": "record_id",
+      "rule_type": "not_null",
+      "severity": "error",
+      "description": "Every row must have a non-empty record_id."
+    },
+    {
+      "rule_id": "record_id_unique",
+      "target": "record_id",
+      "rule_type": "unique",
+      "severity": "error",
+      "description": "record_id values must be unique across the dataset."
+    },
+    {
+      "rule_id": "source_id_not_null",
+      "target": "source_id",
+      "rule_type": "not_null",
+      "severity": "error",
+      "description": "Every row must reference a source_id."
+    },
+    {
+      "rule_id": "source_id_in_source_map",
+      "target": "source_id",
+      "rule_type": "foreign_key",
+      "severity": "warning",
+      "description": "source_id should appear in specs/source_map.json."
+    },
+    {
+      "rule_id": "columns_match_schema",
+      "target": "data/processed/dataset.csv",
+      "rule_type": "schema_columns",
+      "severity": "error",
+      "description": "Dataset columns must match field names in specs/dataset_schema.json."
+    },
+    {
+      "rule_id": "degradation_efficiency_percent_numeric",
+      "target": "degradation_efficiency_percent",
+      "rule_type": "numeric_or_null",
+      "severity": "error",
+      "description": "degradation_efficiency_percent must be numeric or empty/null."
+    },
+    {
+      "rule_id": "extraction_confidence_allowed",
+      "target": "extraction_confidence",
+      "rule_type": "allowed_values",
+      "severity": "warning",
+      "description": "extraction_confidence must be one of: high, medium, low, unknown, or empty."
+    }
+  ]
+}

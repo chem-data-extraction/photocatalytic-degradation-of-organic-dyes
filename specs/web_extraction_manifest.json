@@ -1,0 +1,16 @@
+{
+  "web_extraction_version": "0.1.0",
+  "output_records_file": "data/extracted/web_extracted_records.csv",
+  "script": "scripts/extract_web.py",
+  "input_pages": [
+    {
+      "source_id": "zenodo_16640173",
+      "page_id": "zenodo_16640173_dye_degradation",
+      "url": "https://zenodo.org/records/16640173",
+      "access_date": "2026-05-29",
+      "access_status": "open_access",
+      "selection_reason": "Zenodo photocatalytic degradation dye dataset.",
+      "page_type": "dataset_record"
+    }
+  ]
+}

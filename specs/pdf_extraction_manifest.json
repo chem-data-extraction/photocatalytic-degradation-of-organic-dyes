@@ -1,0 +1,48 @@
+{
+  "pdf_extraction_process": "Extract photocatalysis dye degradation experimental parameters from selected PDF articles using MinerU layout parsing and Gemini API extraction.",
+  "output_records_file": "data/extracted/pdf_extracted_records.csv",
+  "input_sources": [
+    {
+      "source_id": "2024.v50.i4.4030",
+      "pdf_id": "2024.v50.i4.4030",
+      "pdf_path": "data/raw/pdf/2024.v50.i4.4030.pdf",
+      "selection_reason": "Experimental study of MB degradation by hexagonal ZnO particles.",
+      "extraction_status": "completed"
+    },
+    {
+      "source_id": "8874791",
+      "pdf_id": "8874791",
+      "pdf_path": "data/raw/pdf/8874791.pdf",
+      "selection_reason": "Experimental study of dye degradation.",
+      "extraction_status": "completed"
+    },
+    {
+      "source_id": "ao3c07326",
+      "pdf_id": "ao3c07326",
+      "pdf_path": "data/raw/pdf/ao3c07326.pdf",
+      "selection_reason": "Experimental study of dye degradation.",
+      "extraction_status": "completed"
+    },
+    {
+      "source_id": "d6na00104a",
+      "pdf_id": "d6na00104a",
+      "pdf_path": "data/raw/pdf/d6na00104a.pdf",
+      "selection_reason": "Experimental study of dye degradation.",
+      "extraction_status": "completed"
+    },
+    {
+      "source_id": "j.arabjc.2022.103732",
+      "pdf_id": "j.arabjc.2022.103732",
+      "pdf_path": "data/raw/pdf/j.arabjc.2022.103732.pdf",
+      "selection_reason": "Experimental study of dye degradation.",
+      "extraction_status": "completed"
+    },
+    {
+      "source_id": "s41598-026-40207-0",
+      "pdf_id": "s41598-026-40207-0",
+      "pdf_path": "data/raw/pdf/s41598-026-40207-0.pdf",
+      "selection_reason": "Experimental study of dye degradation.",
+      "extraction_status": "completed"
+    }
+  ]
+}
