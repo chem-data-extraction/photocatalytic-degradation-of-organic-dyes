@@ -1,4 +1,4 @@
-# Photocatalytic dye degradation dataset (project template)
+# Photocatalytic dye degradation dataset
 
 Publication-ready **dataset project** for the course *Extraction and preparation of chemical information*. Students move from a research topic to a structured, validated dataset with documented sources, extraction steps, cleaning pipeline, reports, and citation metadata.
 
