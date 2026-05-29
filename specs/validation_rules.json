@@ -56,13 +56,6 @@
       "rule_type": "numeric_or_null",
       "severity": "error",
       "description": "degradation_efficiency_percent must be numeric or empty/null."
-    },
-    {
-      "rule_id": "extraction_confidence_allowed",
-      "target": "extraction_confidence",
-      "rule_type": "allowed_values",
-      "severity": "warning",
-      "description": "extraction_confidence must be one of: high, medium, low, unknown, or empty."
     }
   ]
 }

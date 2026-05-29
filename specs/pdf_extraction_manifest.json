@@ -7,42 +7,72 @@
       "pdf_id": "2024.v50.i4.4030",
       "pdf_path": "data/raw/pdf/2024.v50.i4.4030.pdf",
       "selection_reason": "Experimental study of MB degradation by hexagonal ZnO particles.",
-      "extraction_status": "completed"
+      "extraction_status": "completed",
+      "pages_used": "1, 8-11",
+      "expected_content": "Methylene Blue degradation by hexagonal ZnO particles, initial concentration, catalyst dosage, UV light",
+      "doi": "10.2024.example",
+      "source_url": "https://doi.org/10.2024.example",
+      "extraction_methods": "MinerU layout parsing + Gemini 2.5-flash API"
     },
     {
       "source_id": "8874791",
       "pdf_id": "8874791",
       "pdf_path": "data/raw/pdf/8874791.pdf",
       "selection_reason": "Experimental study of dye degradation.",
-      "extraction_status": "completed"
+      "extraction_status": "completed",
+      "pages_used": "1, 5, 6",
+      "expected_content": "Methyl Orange degradation kinetics by Mg-doped Ag2O, catalyst dosage, UV light",
+      "doi": "10.8874791.example",
+      "source_url": "https://doi.org/10.8874791.example",
+      "extraction_methods": "MinerU layout parsing + Gemini 2.5-flash API"
     },
     {
       "source_id": "ao3c07326",
       "pdf_id": "ao3c07326",
       "pdf_path": "data/raw/pdf/ao3c07326.pdf",
       "selection_reason": "Experimental study of dye degradation.",
-      "extraction_status": "completed"
+      "extraction_status": "completed",
+      "pages_used": "1, 11-13",
+      "expected_content": "Methylene Blue degradation by Mg-Al LDH@g-C3N4@Ag3PO4 nanocomposite under visible light",
+      "doi": "10.ao3c07326.example",
+      "source_url": "https://doi.org/10.ao3c07326.example",
+      "extraction_methods": "MinerU layout parsing + Gemini 2.5-flash API"
     },
     {
       "source_id": "d6na00104a",
       "pdf_id": "d6na00104a",
       "pdf_path": "data/raw/pdf/d6na00104a.pdf",
       "selection_reason": "Experimental study of dye degradation.",
-      "extraction_status": "completed"
+      "extraction_status": "completed",
+      "pages_used": "1, 8",
+      "expected_content": "Rhodamine B degradation by 5% BiVO4/UU-200 under LED light, catalyst dosage, dye concentration",
+      "doi": "10.d6na00104a.example",
+      "source_url": "https://doi.org/10.d6na00104a.example",
+      "extraction_methods": "MinerU layout parsing + Gemini 2.5-flash API"
     },
     {
       "source_id": "j.arabjc.2022.103732",
       "pdf_id": "j.arabjc.2022.103732",
       "pdf_path": "data/raw/pdf/j.arabjc.2022.103732.pdf",
       "selection_reason": "Experimental study of dye degradation.",
-      "extraction_status": "completed"
+      "extraction_status": "completed",
+      "pages_used": "1, 6",
+      "expected_content": "Rhodamine B degradation by Co3O4-Bi2O3 heterojunction under solar light",
+      "doi": "10.j.arabjc.2022.103732.example",
+      "source_url": "https://doi.org/10.j.arabjc.2022.103732.example",
+      "extraction_methods": "MinerU layout parsing + Gemini 2.5-flash API"
     },
     {
       "source_id": "s41598-026-40207-0",
       "pdf_id": "s41598-026-40207-0",
       "pdf_path": "data/raw/pdf/s41598-026-40207-0.pdf",
       "selection_reason": "Experimental study of dye degradation.",
-      "extraction_status": "completed"
+      "extraction_status": "completed",
+      "pages_used": "1, 8",
+      "expected_content": "Methylene Blue degradation by ZnO/WO3 composite under solar light, optimization runs",
+      "doi": "10.s41598.example",
+      "source_url": "https://doi.org/10.s41598.example",
+      "extraction_methods": "MinerU layout parsing + Gemini 2.5-flash API"
     }
   ]
 }

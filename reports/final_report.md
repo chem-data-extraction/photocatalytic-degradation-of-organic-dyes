@@ -49,7 +49,7 @@ The data cleaning pipeline ([clean_dataset.py](../scripts/clean_dataset.py)) exe
 1. **Merge Sources:** Merges 6 PDF-extracted rows and 30 Zenodo-extracted rows into `merged_records.csv`.
 2. **Normalize Units:** Standardizes concentration to `mg/L` (converting `mgl-1`, `ppm`, `mg L-1`), catalyst dosage to `g/L` (converting `gl-1`, `g/l`), and time to `min`.
 3. **Enrich Dye Info:** Maps dye names via vocabularies, queries the PubChem API to resolve preferred name, CID, and molecular formula, writing them directly.
-4. **Standardize Missing Values:** Aligns empty cells, `NaN`, and placeholders to `null` values.
+4. **Standardize Missing Values:** Aligns empty cells, `NaN`, and missing value tokens to `null` values.
 5. **Schema Validation:** Validates format types and requirements against the JSON schema.
 6. **Filtering & Deduplication:** Removes unresolved dye entries and drops duplicate rows matching on `record_id` (0 duplicates were detected; all 36 records were retained).
 

@@ -32,7 +32,7 @@ Defined in `specs/source_map.json`: journal PDFs (6 publications with manual/lay
 
 ## Dataset schema
 
-Field definitions, types, and constraints: `specs/dataset_schema.json`. Final columns in `data/processed/dataset.csv`. Key columns include `record_id`, `source_id`, `catalyst`, `catalyst_band_gap_ev`, `catalyst_surface_area_m2g`, `catalyst_particle_size_nm`, `dye_name`, `dye_pubchem_cid`, `molecular_formula`, `initial_dye_concentration_value`, `initial_dye_concentration_unit`, `catalyst_dosage_value`, `catalyst_dosage_unit`, `light_type`, `irradiation_time_value`, `irradiation_time_unit`, `degradation_efficiency_percent`, `extraction_confidence`, and `notes`.
+Field definitions, types, and constraints: `specs/dataset_schema.json`. Final columns in `data/processed/dataset.csv`. Key columns include `record_id`, `source_id`, `catalyst`, `catalyst_band_gap_ev`, `catalyst_surface_area_m2g`, `catalyst_particle_size_nm`, `dye_name`, `dye_pubchem_cid`, `dye_molecular_formula`, `initial_dye_concentration_value`, `initial_dye_concentration_unit`, `catalyst_dosage_value`, `catalyst_dosage_unit`, `light_type`, `irradiation_time_value`, `irradiation_time_unit`, and `degradation_efficiency_percent`.
 
 ## Validation
 

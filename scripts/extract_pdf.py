@@ -161,6 +161,16 @@ def run_ingestion(
     enable_ocr: bool = False,
     ocr_language: str = "en"
 ) -> None:
+    import httpx
+    try:
+        import mineru._api
+        # Increase connection, read, and write timeouts for slow network connections (e.g. to mineru.net)
+        mineru._api.UPLOAD_TIMEOUT = httpx.Timeout(60.0, read=900.0, write=900.0)
+        mineru._api.REQUEST_TIMEOUT = httpx.Timeout(60.0, read=300.0, write=300.0)
+        logger.info("Adjusted MinerU client timeouts for slow network connections (Upload limit: 15 mins).")
+    except Exception as e:
+        logger.warning(f"Could not adjust MinerU client timeouts: {e}")
+
     from mineru import MinerU
     
     EXTRACTION_MODEL = extraction_model
@@ -196,39 +206,52 @@ def run_ingestion(
             continue
 
         logger.info(f"--- Ingesting: {pdf_name}.pdf ---")
-        try:
-            if token:
-                result = client.extract(
-                    pdf_path,
-                    model=EXTRACTION_MODEL,
-                    formula=ENABLE_FORMULA,
-                    table=ENABLE_TABLE,
-                    ocr=ENABLE_OCR,
-                    language=OCR_LANGUAGE
-                )
-            else:
-                result = client.flash_extract(pdf_path)
-            
-            os.makedirs(pdf_output_dir, exist_ok=True)
-            result.save_all(pdf_output_dir)
-            
-            full_md_path = os.path.join(pdf_output_dir, "full.md")
-            if os.path.exists(full_md_path):
-                if os.path.exists(md_file_path):
-                    os.remove(md_file_path)
-                os.rename(full_md_path, md_file_path)
-                logger.success(f"  Renamed full.md to: {md_file_path}")
+        
+        max_ingest_retries = 3
+        ingest_delay = 10
+        success = False
+        
+        for attempt in range(1, max_ingest_retries + 1):
+            try:
+                if token:
+                    result = client.extract(
+                        pdf_path,
+                        model=EXTRACTION_MODEL,
+                        formula=ENABLE_FORMULA,
+                        table=ENABLE_TABLE,
+                        ocr=ENABLE_OCR,
+                        language=OCR_LANGUAGE
+                    )
+                else:
+                    result = client.flash_extract(pdf_path)
+                
+                os.makedirs(pdf_output_dir, exist_ok=True)
+                result.save_all(pdf_output_dir)
+                
+                full_md_path = os.path.join(pdf_output_dir, "full.md")
+                if os.path.exists(full_md_path):
+                    if os.path.exists(md_file_path):
+                        os.remove(md_file_path)
+                    os.rename(full_md_path, md_file_path)
+                    logger.success(f"  Renamed full.md to: {md_file_path}")
 
-            for filename in os.listdir(pdf_output_dir):
-                if filename.endswith("_origin.pdf"):
-                    try:
-                        os.remove(os.path.join(pdf_output_dir, filename))
-                    except Exception as e:
-                        logger.error(f"  Error deleting redundant PDF copy: {e}")
+                for filename in os.listdir(pdf_output_dir):
+                    if filename.endswith("_origin.pdf"):
+                        try:
+                            os.remove(os.path.join(pdf_output_dir, filename))
+                        except Exception as e:
+                            logger.error(f"  Error deleting redundant PDF copy: {e}")
 
-            cleanup_unused_images(pdf_output_dir, md_file_path)
-        except Exception as e:
-            logger.error(f"  Error processing {pdf_name}.pdf during ingestion: {e}")
+                cleanup_unused_images(pdf_output_dir, md_file_path)
+                success = True
+                break
+            except Exception as e:
+                logger.warning(f"  MinerU ingestion failed on attempt {attempt}/{max_ingest_retries}: {e}")
+                if attempt < max_ingest_retries:
+                    time.sleep(ingest_delay)
+                    ingest_delay *= 2
+                else:
+                    logger.error(f"  All {max_ingest_retries} attempts failed to ingest {pdf_name}.pdf during ingestion.")
 
 # ==============================================================================
 # STAGE 3: Gemini Data Extraction
@@ -277,8 +300,8 @@ def build_gemini_schema_from_template(template_schema_path: Path) -> dict:
         "boolean": "boolean"
     }
     
-    # We want to extract all fields except record_id, source_id, dye_pubchem_cid, and molecular_formula
-    exclude_fields = {"record_id", "source_id", "dye_pubchem_cid", "molecular_formula"}
+    # We want to extract all fields except record_id, source_id, dye_pubchem_cid, and dye_molecular_formula
+    exclude_fields = {"record_id", "source_id", "dye_pubchem_cid", "dye_molecular_formula"}
     
     for field in temp_schema.get("fields", []):
         name = field["name"]

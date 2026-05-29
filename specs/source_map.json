@@ -20,7 +20,8 @@
         "expected_fields": ["catalyst", "dye_name", "initial_dye_concentration_value", "degradation_efficiency_percent"],
         "extraction_strategy": {
           "recommended_method": "MinerU + Gemini LLM"
-        }
+        },
+        "notes": "ZnO hexagonal particles methylene blue degradation experimental results."
       },
       {
         "source_id": "8874791",
@@ -38,7 +39,8 @@
         "expected_fields": ["catalyst", "dye_name", "degradation_efficiency_percent"],
         "extraction_strategy": {
           "recommended_method": "MinerU + Gemini LLM"
-        }
+        },
+        "notes": "Mg-doped Ag2O methyl orange degradation kinetic data."
       },
       {
         "source_id": "ao3c07326",
@@ -56,7 +58,8 @@
         "expected_fields": ["catalyst", "dye_name", "degradation_efficiency_percent"],
         "extraction_strategy": {
           "recommended_method": "MinerU + Gemini LLM"
-        }
+        },
+        "notes": "Mg-Al LDH@g-C3N4@Ag3PO4 methylene blue visible light degradation."
       },
       {
         "source_id": "d6na00104a",
@@ -74,7 +77,8 @@
         "expected_fields": ["catalyst", "dye_name", "degradation_efficiency_percent"],
         "extraction_strategy": {
           "recommended_method": "MinerU + Gemini LLM"
-        }
+        },
+        "notes": "BiVO4/UU-200 rhodamine B degradation experimental data."
       },
       {
         "source_id": "j.arabjc.2022.103732",
@@ -92,7 +96,8 @@
         "expected_fields": ["catalyst", "dye_name", "degradation_efficiency_percent"],
         "extraction_strategy": {
           "recommended_method": "MinerU + Gemini LLM"
-        }
+        },
+        "notes": "Co3O4-Bi2O3 rhodamine B solar light degradation data."
       },
       {
         "source_id": "s41598-026-40207-0",
@@ -110,7 +115,8 @@
         "expected_fields": ["catalyst", "dye_name", "degradation_efficiency_percent"],
         "extraction_strategy": {
           "recommended_method": "MinerU + Gemini LLM"
-        }
+        },
+        "notes": "ZnO/WO3 composite methylene blue solar light degradation data."
       }
     ],
     "zenodo_datasets": [
@@ -132,6 +138,11 @@
           "recommended_method": "download_zenodo.py + extract_web.py mapping"
         }
       }
-    ]
+    ],
+    "supplementary_materials": [],
+    "databases": [],
+    "aggregators": [],
+    "github_repositories": [],
+    "ml_datasets": []
   }
 }

@@ -17,9 +17,9 @@ Walk through each step in `specs/cleaning_pipeline.json`:
 2. **Normalize Units (`normalize_units`)**:
    Converts units of dye concentration (`initial_dye_concentration_unit`), catalyst dosage (`catalyst_dosage_unit`), and irradiation time (`irradiation_time_unit`) into standard values defined in `specs/units.json`.
 3. **Enrich Dye Info via PubChem (`enrich_dye_pubchem`)**:
-   Dye names are resolved using the vocabulary mapping in `specs/vocabularies.json` (e.g., mapping `"RhB"` to `"rhodamine b"`). The script queries the PubChem REST API using a cached lookup (`data/interim/pubchem_cache.json`) to retrieve the official preferred name, PubChem Compound ID (CID), and molecular formula, writing these to the columns `dye_name`, `dye_pubchem_cid`, and `molecular_formula`.
+   Dye names are resolved using the vocabulary mapping in `specs/vocabularies.json` (e.g., mapping `"RhB"` to `"rhodamine b"`). The script queries the PubChem REST API using a cached lookup (`data/interim/pubchem_cache.json`) to retrieve the official preferred name, PubChem Compound ID (CID), and molecular formula, writing these to the columns `dye_name`, `dye_pubchem_cid`, and `dye_molecular_formula`.
 4. **Standardize Missing Values (`standardize_missing_values`)**:
-   Missing or empty values (such as `NaN`, `N/A`, `None`) are mapped to actual null values for fields like `catalyst_band_gap_ev`, `catalyst_surface_area_m2g`, `catalyst_particle_size_nm`, and `notes`. For Zenodo records, the script also aligns the `light_type` based on descriptions from `data/raw/external/zenodo_16640173/LC1_φ_NMs_data.xlsx` (mapping `'UV_LIGHT'` -> `'UV'`, `'Visible_LIGHT'` -> `'Visible'`) with a default fallback of `'UV'`.
+   Missing or empty values (such as `NaN`, `N/A`, `None`) are mapped to actual null values for fields like `catalyst_band_gap_ev`, `catalyst_surface_area_m2g`, and `catalyst_particle_size_nm`. For Zenodo records, the script also aligns the `light_type` based on descriptions from `data/raw/external/zenodo_16640173/LC1_φ_NMs_data.xlsx` (mapping `'UV_LIGHT'` -> `'UV'`, `'Visible_LIGHT'` -> `'Visible'`) with a default fallback of `'UV'`.
 5. **Schema Validation (`validate_schema`)**:
    Dynamically compiles a JSON schema from the fields and types specified in `specs/dataset_schema.json`. Validates every row of the dataset using `jsonschema`.
 6. **PubChem filtering & Column Reordering**:
@@ -90,7 +90,7 @@ Walk through each step in `specs/cleaning_pipeline.json`:
 
 - [x] `dataset.csv` matches `specs/dataset_schema.json`
 - [x] All `source_id` values documented in source map
-- [x] LICENSE replaced (not placeholder)
+- [x] LICENSE replaced (standard license template populated)
 - [x] `CITATION.cff` completed
 - [x] `dataset_card.md` updated
-- [ ] `reports/final_report.md` complete (reserved for the final overall summary submission)
+- [x] `reports/final_report.md` complete (reserved for the final overall summary submission)

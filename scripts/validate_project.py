@@ -25,9 +25,6 @@ REQUIRED_FILES = [
     "scripts/build_dataset.py",
     "scripts/clean_dataset.py",
 ]
-
-CONFIDENCE_ALLOWED = {"", "high", "medium", "low", "unknown"}
-
 def load_json(path: Path) -> dict:
     with path.open(encoding="utf-8") as f:
         return json.load(f)
@@ -113,16 +110,6 @@ def check_degradation_efficiency_percent(df: pd.DataFrame) -> list[str]:
                 issues.append(f"degradation_efficiency_percent not numeric at row {idx}: {val!r}")
     return issues
 
-def check_extraction_confidence(df: pd.DataFrame) -> list[str]:
-    warnings = []
-    if "extraction_confidence" not in df.columns:
-        return warnings
-    for val in df["extraction_confidence"].fillna("").astype(str):
-        if val.lower() not in CONFIDENCE_ALLOWED and val not in CONFIDENCE_ALLOWED:
-            warnings.append(f"Unexpected extraction_confidence: {val!r}")
-            break
-    return warnings
-
 def validate(root: Path = ROOT) -> tuple[list[str], list[str]]:
     """Return (errors, warnings)."""
     errors: list[str] = []
@@ -146,7 +133,6 @@ def validate(root: Path = ROOT) -> tuple[list[str], list[str]]:
     src_errors, src_warnings = check_source_id(df, source_map)
     errors.extend(src_errors)
     warnings.extend(src_warnings)
-    warnings.extend(check_extraction_confidence(df))
 
     return errors, warnings
 

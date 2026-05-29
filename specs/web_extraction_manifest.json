@@ -10,7 +10,12 @@
       "access_date": "2026-05-29",
       "access_status": "open_access",
       "selection_reason": "Zenodo photocatalytic degradation dye dataset.",
-      "page_type": "dataset_record"
+      "page_type": "dataset_record",
+      "raw_snapshot_path": "data/raw/external/zenodo_16640173/LC1_φ_NMs_data.xlsx",
+      "parser_plan": "Direct REST API download of Zenodo metadata and records, followed by pandas openpyxl loading of sheet '9. Descriptors' and LLM-guided mapping to standardize column headers.",
+      "expected_content": "Tabular experimental measurements of Rhodamine B degradation efficiency (Eff_%) over TiO2_SiO2 and TiO2_N_col catalysts under UV and Visible light conditions.",
+      "extraction_status": "completed",
+      "robots_notes": "Zenodo permits API access and programmatic download of open dataset records without registration. Robots.txt rules respected by using public endpoint APIs."
     }
   ]
 }

@@ -69,7 +69,7 @@ The raw extracted values map directly to the `dataset_schema.json` fields:
 - `irradiation_time_value` & `_unit`: Time duration and unit (`180.0` & `min`, `120.0` & `min`, `60.0` & `min`).
 - `degradation_efficiency_percent`: Extracted target variable (`96.0`, `96.1`, `99.0`, `96.79`).
 
-*Note on Post-processing*: Physical properties (`catalyst_band_gap_ev`, `catalyst_surface_area_m2g`, `catalyst_particle_size_nm`) and dye chemical identifiers (`dye_pubchem_cid`, `molecular_formula`) are left empty in raw PDF extraction. They are resolved programmatically in the cleaning and normalization pipelines via PubChem API integration.
+*Note on Post-processing*: Physical properties (`catalyst_band_gap_ev`, `catalyst_surface_area_m2g`, `catalyst_particle_size_nm`) and dye chemical identifiers (`dye_pubchem_cid`, `dye_molecular_formula`) are left empty in raw PDF extraction. They are resolved programmatically in the cleaning and normalization pipelines via PubChem API integration.
 
 ## Extraction problems
 

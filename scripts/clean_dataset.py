@@ -90,7 +90,7 @@ def enrich_dye_info(raw_name: str, cache: dict, vocab_mapping: dict) -> dict:
                 result = {
                     "preferred_term": title,
                     "pubchem_cid": cid,
-                    "molecular_formula": formula
+                    "dye_molecular_formula": formula
                 }
                 cache[cache_key] = result
                 save_cache(cache)
@@ -105,7 +105,7 @@ def enrich_dye_info(raw_name: str, cache: dict, vocab_mapping: dict) -> dict:
     result = {
         "preferred_term": raw_name,
         "pubchem_cid": None,
-        "molecular_formula": None
+        "dye_molecular_formula": None
     }
     cache[cache_key] = result
     save_cache(cache)
@@ -239,7 +239,7 @@ def clean_and_validate(
         info = enrich_dye_info(name, cache, vocab_mapping)
         preferred_terms.append(info["preferred_term"])
         cids.append(info["pubchem_cid"])
-        formulas.append(info["molecular_formula"])
+        formulas.append(info.get("dye_molecular_formula") or info.get("molecular_formula"))
         
         if info["pubchem_cid"] is None:
             conflicts_log.append({
@@ -253,7 +253,7 @@ def clean_and_validate(
         
     df['dye_name'] = preferred_terms
     df['dye_pubchem_cid'] = cids
-    df['molecular_formula'] = formulas
+    df['dye_molecular_formula'] = formulas
     logger.info("Enriched dye names and added PubChem CID/Molecular Formula.")
     
     # 3. NaN Handling / Defaults mapping

@@ -59,7 +59,7 @@
       "example": 6099
     },
     {
-      "name": "molecular_formula",
+      "name": "dye_molecular_formula",
       "type": "string",
       "required": false,
       "description": "Molecular formula of the dye.",
@@ -120,20 +120,6 @@
       "required": false,
       "description": "Dye degradation efficiency percentage.",
       "example": 95.5
-    },
-    {
-      "name": "extraction_confidence",
-      "type": "string",
-      "required": false,
-      "description": "Confidence in extracted values: high, medium, low, or unknown.",
-      "example": "high"
-    },
-    {
-      "name": "notes",
-      "type": "string",
-      "required": false,
-      "description": "Free-text notes, caveats, or provenance details.",
-      "example": "Extracted from Table 1."
     }
   ]
 }
