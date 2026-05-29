@@ -1,13 +1,16 @@
 {
-  "source_id": "Visible Light-Driven Photocatalytic Degradation of Methylene Blue Dye Using a Highly Efficient Mg−Al LDH@g-C3N4@Ag3PO4 Nanocomposite, ACS Omega 2024, 9, 4581−4593",
-  "catalyst": "Mg-Al LDH@g-C3N430@Ag3PO45",
+  "catalyst": "Mg−Al LDH@g-C₃N₄30@Ag₃PO₄5",
+  "catalyst_band_gap_ev": 2.69,
+  "catalyst_surface_area_m2g": null,
+  "catalyst_particle_size_nm": null,
   "dye_name": "Methylene Blue",
-  "initial_dye_concentration_value": 10,
-  "initial_dye_concentration_unit": "mg L^-1",
-  "catalyst_dosage_value": 0.05,
-  "catalyst_dosage_unit": "g",
+  "initial_dye_concentration_value": 10.0,
+  "initial_dye_concentration_unit": "mg/L",
+  "catalyst_dosage_value": 1.25,
+  "catalyst_dosage_unit": "g/L",
   "light_type": "Visible",
-  "irradiation_time_value": 45,
+  "irradiation_time_value": 45.0,
   "irradiation_time_unit": "min",
-  "degradation_efficiency_percent": 99
+  "degradation_efficiency_percent": 99.0,
+  "source_id": "ao3c07326"
 }

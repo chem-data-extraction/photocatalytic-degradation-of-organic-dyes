@@ -1,13 +1,16 @@
 {
-  "source_id": "Kinetic Investigation of Photocatalytic Degradation of Methyl Orange Dye Using Mg-Doped Ag2O Nanoparticle",
-  "catalyst": "Mg-doped Ag2O",
-  "dye_name": "Methyl Orange",
-  "initial_dye_concentration_value": 30,
+  "catalyst": "Mg-doped Ag2O nanoparticles",
+  "catalyst_band_gap_ev": 2.6,
+  "catalyst_surface_area_m2g": null,
+  "catalyst_particle_size_nm": 23.87,
+  "dye_name": "methyl orange",
+  "initial_dye_concentration_value": 30.0,
   "initial_dye_concentration_unit": "ppm",
-  "catalyst_dosage_value": 0.4,
-  "catalyst_dosage_unit": "g",
+  "catalyst_dosage_value": null,
+  "catalyst_dosage_unit": null,
   "light_type": "UV",
-  "irradiation_time_value": 150,
+  "irradiation_time_value": 150.0,
   "irradiation_time_unit": "min",
-  "degradation_efficiency_percent": 96.1
+  "degradation_efficiency_percent": 96.1,
+  "source_id": "8874791"
 }

@@ -2,3 +2,4 @@
 {"timestamp": "2026-05-29T13:15:48.857630Z", "step": "web_extraction", "source_id": "web_manifest", "status": "success", "tool": "extract_web.py", "output": "data/extracted/web_extracted_records.csv", "records_extracted": 30}
 {"timestamp": "2026-05-29T15:37:17.913714Z", "step": "pdf_extraction", "source_id": "pdf_manifest", "status": "success", "tool": "extract_pdf.py", "output": "data/extracted/pdf_extracted_records.csv", "records_extracted": 6}
 {"timestamp": "2026-05-29T16:40:43.115588Z", "step": "web_extraction", "source_id": "web_manifest", "status": "success", "tool": "extract_web.py", "output": "data/extracted/web_extracted_records.csv", "records_extracted": 30}
+{"timestamp": "2026-05-29T17:25:01.050386Z", "step": "pdf_extraction", "source_id": "pdf_manifest", "status": "success", "tool": "extract_pdf.py", "output": "data/extracted/pdf_extracted_records.csv", "records_extracted": 6}

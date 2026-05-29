@@ -1,10 +1,10 @@
 record_id,source_id,catalyst,catalyst_band_gap_ev,catalyst_surface_area_m2g,catalyst_particle_size_nm,dye_name,dye_pubchem_cid,dye_molecular_formula,initial_dye_concentration_value,initial_dye_concentration_unit,catalyst_dosage_value,catalyst_dosage_unit,light_type,irradiation_time_value,irradiation_time_unit,degradation_efficiency_percent
-rec_photo_pdf_2024.v50.i4.4030_0001,2024.v50.i4.4030,MicNo-ZnO,,,,Methylene Blue,6099,C16H18ClN3S,10.0,mg/L,0.25,g/L,UV,180.0,min,96.0
-rec_photo_pdf_8874791_0002,8874791,Mg-doped Ag2O,,,,C.I. Acid Orange 52,23673835,C14H14N3NaO3S,30.0,mg/L,0.4,g,UV,150.0,min,96.1
-rec_photo_pdf_ao3c07326_0003,ao3c07326,Mg-Al LDH@g-C3N430@Ag3PO45,,,,Methylene Blue,6099,C16H18ClN3S,10.0,mg/L,0.05,g,Visible,45.0,min,99.0
-rec_photo_pdf_d6na00104a_0004,d6na00104a,5% BiVO4/UU-200,,,,Rhodamine B,6694,C28H31ClN2O3,15.0,mg/L,10.0,mg,LED,120.0,min,96.79
-rec_photo_pdf_j.arabjc.2022.103732_0005,j.arabjc.2022.103732,Co3O4-Bi2O3,,,,Rhodamine B,6694,C28H31ClN2O3,100.0,mg/L,0.05,g,Solar,120.0,min,92.0
-rec_photo_pdf_s41598-026-40207-0_0006,s41598-026-40207-0,5% ZnO/WO3,,,,Methylene Blue,6099,C16H18ClN3S,5.0,mg/L,100.0,mg/L,Solar,60.0,min,93.8
+rec_photo_pdf_2024.v50.i4.4030_0001,2024.v50.i4.4030,MicNo-ZnO,,39.395,,Methylene Blue,6099,C16H18ClN3S,10.0,mg/L,0.25,g/L,UV,180.0,min,96.0
+rec_photo_pdf_8874791_0002,8874791,Mg-doped Ag2O nanoparticles,2.6,,23.87,C.I. Acid Orange 52,23673835,C14H14N3NaO3S,30.0,mg/L,,,UV,150.0,min,96.1
+rec_photo_pdf_ao3c07326_0003,ao3c07326,Mg−Al LDH@g-C₃N₄30@Ag₃PO₄5,2.69,,,Methylene Blue,6099,C16H18ClN3S,10.0,mg/L,1.25,g/L,Visible,45.0,min,99.0
+rec_photo_pdf_d6na00104a_0004,d6na00104a,5% BiVO4/UU-200,,10.5,,Rhodamine B,6694,C28H31ClN2O3,15.0,mg/L,0.1,g/L,LED,120.0,min,96.79
+rec_photo_pdf_j.arabjc.2022.103732_0005,j.arabjc.2022.103732,Co3O4-Bi2O3,,,,Rhodamine B,6694,C28H31ClN2O3,100.0,mg/L,,,Visible,120.0,min,92.0
+rec_photo_pdf_s41598-026-40207-0_0006,s41598-026-40207-0,5% ZnO/WO₃,2.67,21.0,18.05,Methylene Blue,6099,C16H18ClN3S,5.0,mg/L,100.0,mg/L,Solar,60.0,min,93.8
 rec_photo_web_zenodo_16640173_00001,zenodo_16640173,TiO2_SiO2,,,,Rhodamine B,6694,C28H31ClN2O3,7.0,mg/L,0.1,g/L,Visible,15.0,min,5.514705882352954
 rec_photo_web_zenodo_16640173_00002,zenodo_16640173,TiO2_SiO2,,,,Rhodamine B,6694,C28H31ClN2O3,7.0,mg/L,0.1,g/L,UV,15.0,min,6.323185011709597
 rec_photo_web_zenodo_16640173_00003,zenodo_16640173,TiO2_SiO2,,,,Rhodamine B,6694,C28H31ClN2O3,7.0,mg/L,0.1,g/L,Visible,15.0,min,27.97619047619049

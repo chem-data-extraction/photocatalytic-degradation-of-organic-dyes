@@ -1,13 +1,16 @@
 {
-  "source_id": "Muhammad Saeed et al., Co3O4-Bi2O3 heterojunction: An effective photocatalyst for photodegradation of rhodamine B dye",
   "catalyst": "Co3O4-Bi2O3",
+  "catalyst_band_gap_ev": null,
+  "catalyst_surface_area_m2g": null,
+  "catalyst_particle_size_nm": null,
   "dye_name": "rhodamine B",
   "initial_dye_concentration_value": 100,
   "initial_dye_concentration_unit": "mg/L",
-  "catalyst_dosage_value": 0.05,
-  "catalyst_dosage_unit": "g",
-  "light_type": "Solar",
+  "catalyst_dosage_value": null,
+  "catalyst_dosage_unit": null,
+  "light_type": "Visible",
   "irradiation_time_value": 120,
   "irradiation_time_unit": "min",
-  "degradation_efficiency_percent": 92
+  "degradation_efficiency_percent": 92,
+  "source_id": "j.arabjc.2022.103732"
 }
