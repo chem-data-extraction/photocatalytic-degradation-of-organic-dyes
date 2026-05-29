@@ -29,18 +29,6 @@ One **record** = one experimentally reported photocatalytic degradation efficien
 
 **Formats:** JSON for specs and manifests; CSV for tabular data; Python for pipelines; Markdown for reports and documentation only. Notebooks are optional.
 
-## Five course practices
-
-Develop the repository in five steps (see `reports/`):
-
-1. **Record definition and dataset schema** — `specs/dataset_schema.json`, Practice 1 report  
-2. **Source map** — `specs/source_map.json`, Practice 2 report  
-3. **PDF extraction** — `specs/pdf_extraction_manifest.json`, `scripts/extract_pdf.py`, Practice 3 report  
-4. **Web extraction** — `specs/web_extraction_manifest.json`, `scripts/extract_web.py`, Practice 4 report  
-5. **Cleaning, normalization and publication** — `specs/cleaning_pipeline.json`, cleaning scripts, Practice 5 report  
-
-Complete **`reports/final_report.md`** and **`dataset_card.md`** before submission.
-
 ## Data pipeline
 
 ```text
@@ -50,14 +38,6 @@ raw (PDF / web / external)
   → clean → data/processed/dataset.csv
   → validate (rules + pytest)
 ```
-
-## Required final artifacts
-
-- `data/processed/dataset.csv` aligned with `specs/dataset_schema.json`
-- Updated `specs/source_map.json` and extraction manifests
-- Practice reports 1–5 and `reports/final_report.md`
-- `dataset_card.md`, `LICENSE`, `CITATION.cff`
-- Passing validation and tests
 
 ## How to run validation
 
@@ -80,9 +60,3 @@ To run the data extraction (requires configuring `.env` with `GEMINI_API_KEY` an
 python scripts/extract_pdf.py
 python scripts/extract_web.py
 ```
-
-## License and citation
-
-- Replace the placeholder in **`LICENSE`** before publication (e.g. CC-BY-4.0 or CC0-1.0, subject to upstream source licenses).
-- Fill in **`CITATION.cff`** with authors, version, and repository URL.
-- Summarize the dataset for users in **`dataset_card.md`**.

@@ -1,24 +1,28 @@
 cff-version: 1.2.0
 message: "If you use this dataset or software in your work, please cite it as below."
-title: "Photocatalytic Dye Degradation Dataset"
-version: 1.0.0
-doi: 10.5281/zenodo.1234567
-date-released: 2026-05-28
-repository-code: "https://github.com/chem-data-extraction/photocatalytic-degradation-of-organic-dyes"
+title: "Photocatalytic dye degradation dataset"
+type: dataset
+version: 0.1.0
+date-released: 2026-05-29
+repository-code: "https://github.com/arutamonofu/itmo_extraction"
+url: "https://github.com/arutamonofu/itmo_extraction"
+license: CC-BY-4.0
 authors:
-  - family-names: "Ivanov"
-    given-names: "Ivan"
-  - family-names: "Petrov"
-    given-names: "Petr"
+  - family-names: "Artamonov"
+    given-names: "Aleksandr"
+keywords:
+  - photocatalysis
+  - dye degradation
+  - organic dyes
+  - semiconductor photocatalysts
+  - scientific data extraction
 preferred-citation:
   type: data
   authors:
-    - family-names: "Ivanov"
-      given-names: "Ivan"
-    - family-names: "Petrov"
-      given-names: "Petr"
-  title: "Photocatalytic Dye Degradation Dataset"
+    - family-names: "Artamonov"
+      given-names: "Aleksandr"
+  title: "Photocatalytic dye degradation dataset"
   year: 2026
-  doi: 10.5281/zenodo.1234567
   publisher: "Zenodo"
-  version: 1.0.0
+  version: 0.1.0
+

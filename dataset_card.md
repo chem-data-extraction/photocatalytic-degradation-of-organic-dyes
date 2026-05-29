@@ -54,8 +54,9 @@ Direct industrial design of photocatalytic reactors without verification of raw 
 
 ## License
 
-See `LICENSE` — MIT License (refer to the `LICENSE` file for details, subject to upstream Zenodo/publisher licenses).
+See `LICENSE` — Creative Commons Attribution 4.0 International (CC-BY-4.0) (refer to the `LICENSE` file for details, subject to upstream Zenodo/publisher licenses).
 
 ## Citation
 
-See `CITATION.cff`. Update authors, version, and repository URL before release.
+See `CITATION.cff` for citing this dataset.
+
