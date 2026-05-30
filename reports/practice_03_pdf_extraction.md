@@ -58,18 +58,24 @@ A hybrid automated pipeline was developed and implemented via `scripts/extract_p
 
 ## Extracted fields
 
-The raw extracted values map directly to the `dataset_schema.json` fields:
-- `record_id`: Generated systematically as `rec_photo_pdf_{pdf_id}_{index:04d}` (e.g. `rec_photo_pdf_2024.v50.i4.4030_0001`).
-- `source_id`: Filled with the filename stem (e.g. `2024.v50.i4.4030`).
-- `catalyst`: Chemical formulation of the active catalyst (verbatim: `MicNo-ZnO`, `Mg-doped Ag2O`, etc.).
-- `dye_name`: Common name of the dye (verbatim: `Methylene blue`, `Methyl Orange`, `rhodamine B`).
-- `initial_dye_concentration_value` & `_unit`: Extracted verbatim (`10.0` & `mg/L`, `30.0` & `ppm`, `15.0` & `mg L-1`).
-- `catalyst_dosage_value` & `_unit`: Extracted verbatim (`0.25` & `g/L`, `0.4` & `g`, `10.0` & `mg`).
+The raw extracted values map directly to the 17 fields of `dataset_schema.json`:
+- `record_id`: Generated systematically as `rec_photo_pdf_{pdf_id}_{index:04d}` (e.g., `rec_photo_pdf_2024.v50.i4.4030_0001`).
+- `source_id`: Filled with the filename stem (e.g., `2024.v50.i4.4030`).
+- `catalyst`: Chemical formulation of the active catalyst (verbatim, e.g., `MicNo-ZnO`, `Mg-doped Ag2O nanoparticles`).
+- `catalyst_band_gap_ev`: Band gap of the catalyst in eV, extracted directly from the text if reported (e.g., `2.6`, `2.69`).
+- `catalyst_surface_area_m2g`: Specific surface area in m2/g, extracted directly from the text if reported (e.g., `39.395`, `10.5`).
+- `catalyst_particle_size_nm`: Particle size / diameter in nm, extracted directly from the text if reported (e.g., `23.87`, `18.05`).
+- `dye_name`: Common name of the dye as written in the text (verbatim, e.g., `Methylene blue`, `methyl orange`, `rhodamine B`).
+- `dye_pubchem_cid`: Left empty/null during raw extraction; populated programmatically during the cleaning phase.
+- `dye_molecular_formula`: Left empty/null during raw extraction; populated programmatically during the cleaning phase.
+- `initial_dye_concentration_value`: Initial concentration value extracted verbatim (e.g., `10.0`, `30.0`, `15.0`).
+- `initial_dye_concentration_unit`: Concentration unit extracted verbatim (e.g., `mg/L`, `ppm`, `mg L-1`).
+- `catalyst_dosage_value`: Catalyst dosage value extracted verbatim (e.g., `0.25`, `0.4`, `100.0`).
+- `catalyst_dosage_unit`: Catalyst dosage unit extracted verbatim (e.g., `g/L`, `mg/L`).
 - `light_type`: Standardized categorical category (`UV`, `Visible`, `Solar`, `LED`).
-- `irradiation_time_value` & `_unit`: Time duration and unit (`180.0` & `min`, `120.0` & `min`, `60.0` & `min`).
-- `degradation_efficiency_percent`: Extracted target variable (`96.0`, `96.1`, `99.0`, `96.79`).
-
-*Note on Post-processing*: Physical properties (`catalyst_band_gap_ev`, `catalyst_surface_area_m2g`, `catalyst_particle_size_nm`) and dye chemical identifiers (`dye_pubchem_cid`, `dye_molecular_formula`) are left empty in raw PDF extraction. They are resolved programmatically in the cleaning and normalization pipelines via PubChem API integration.
+- `irradiation_time_value`: Duration value extracted verbatim (e.g., `180.0`, `120.0`, `60.0`).
+- `irradiation_time_unit`: Duration unit extracted verbatim (e.g., `min`).
+- `degradation_efficiency_percent`: Target degradation efficiency percentage extracted verbatim (e.g., `96.0`, `96.1`, `99.0`, `96.79`).
 
 ## Extraction problems
 

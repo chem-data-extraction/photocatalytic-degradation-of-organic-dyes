@@ -34,14 +34,23 @@ Task formalization, defining strict dataset boundaries, and establishing the fou
 
 | Field Name | Required? | Format | Description / Example |
 |:---|:---|:---|:---|
-| `source_doi` | Yes | String (ID) | DOI of the source article (to ensure data verifiability) |
-| `catalyst_formula` | Yes | String | Photocatalyst formula (e.g., TiO2, g-C3N4) |
-| `dye_name` | Yes | String | Name of the dye (Methylene Blue, Rhodamine B) |
-| `initial_dye_conc` | Yes | Float | Initial dye concentration in the solution (mg/L) |
-| `catalyst_dosage` | Yes | Float | Catalyst mass per solution volume (g/L) |
-| `light_type` | Yes | Categorical | Light source. Values: UV, Visible, Solar, LED |
-| `time_min` | Yes | Float | Irradiation time of the solution (in minutes) |
-| `efficiency_percent` | Yes | Float | Target variable: % of dye degradation (0.0 – 100.0) |
+| `record_id` | Yes | String (ID) | Stable unique identifier for one degradation measurement record. |
+| `source_id` | Yes | String | Identifier linking to an entry in `specs/source_map.json`. |
+| `catalyst` | Yes | String | Composition/formula of the photocatalyst used (e.g., `TiO2`, `MicNo-ZnO`). |
+| `catalyst_band_gap_ev` | No | Float | Band gap of the photocatalyst in eV (e.g., `3.2`). |
+| `catalyst_surface_area_m2g` | No | Float | Specific surface area of the photocatalyst in m2/g (e.g., `50.0`). |
+| `catalyst_particle_size_nm` | No | Float | Particle size / diameter of the photocatalyst in nm (e.g., `21.0`). |
+| `dye_name` | Yes | String | Standardized preferred name of the organic dye pollutant (e.g., `Methylene Blue`). |
+| `dye_pubchem_cid` | Yes | Integer | PubChem Compound ID (CID) of the dye (e.g., `6099`). |
+| `dye_molecular_formula` | No | String | Molecular formula of the dye (e.g., `C16H18ClN3S`). |
+| `initial_dye_concentration_value` | No | Float | Initial concentration of the dye pollutant (e.g., `10.0`). |
+| `initial_dye_concentration_unit` | No | String | Unit of the initial dye concentration, standardized to `mg/L`. |
+| `catalyst_dosage_value` | No | Float | Photocatalyst dosage or concentration in the reaction mixture (e.g., `1.0`). |
+| `catalyst_dosage_unit` | No | String | Unit of the catalyst dosage, standardized to `g/L`. |
+| `light_type` | No | Categorical | Type of light source used for irradiation (UV, Visible, Solar, LED, Dark). |
+| `irradiation_time_value` | No | Float | Duration of light irradiation (e.g., `60.0`). |
+| `irradiation_time_unit` | No | String | Unit of irradiation time, standardized to `min`. |
+| `degradation_efficiency_percent` | No | Float | Dye degradation efficiency percentage (0.0 – 100.0). |
 
 ## Ambiguous cases
 

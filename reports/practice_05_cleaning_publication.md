@@ -75,11 +75,11 @@ Walk through each step in `specs/cleaning_pipeline.json`:
   - `Rhodamine B` (CID: 6694)
 - **Catalysts Covered (8 unique)**:
   - `MicNo-ZnO`
-  - `Mg-doped Ag2O`
-  - `Mg-Al LDH@g-C3N430@Ag3PO45`
+  - `Mg-doped Ag2O nanoparticles`
+  - `Mg−Al LDH@g-C₃N₄30@Ag₃PO₄5`
   - `5% BiVO4/UU-200`
   - `Co3O4-Bi2O3`
-  - `5% ZnO/WO3`
+  - `5% ZnO/WO₃`
   - `TiO2_SiO2`
   - `TiO2_N_col`
 - **Sources Tracked (7 unique)**:
