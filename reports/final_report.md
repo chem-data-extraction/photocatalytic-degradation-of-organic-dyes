@@ -41,7 +41,7 @@ Data extraction was executed using automated, reproducible scripts:
 - **Web Extraction (30 records):**
   - *Methods:* A Python script ([extract_web.py](../scripts/extract_web.py)) scraped data files and protocol metadata from the Zenodo API (Record 16640173) and utilized `gemini-3.1-flash-lite` to automatically map source Excel columns to target database columns.
   - *Issues:* Extracting implicit parameters (e.g., initial concentration and catalyst dosage) that were omitted from the main data sheets because they were defined as fixed constants in separate protocol metadata spreadsheets.
-- **Links to practice reports:** See [Practice 3 — PDF extraction](practice_03_pdf_extraction.md) and [Practice 4 — Web extraction](practice_04_web_extraction.md) for deeper details.
+- **Technical reports:** See [PDF extraction report](practice_03_pdf_extraction.md) and [Web extraction report](practice_04_web_extraction.md) for deeper details.
 
 ## Cleaning and normalization summary
 

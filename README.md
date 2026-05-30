@@ -1,6 +1,5 @@
 # Photocatalytic dye degradation dataset
-
-Publication-ready **dataset project** for the course *Extraction and preparation of chemical information*.
+Publication-ready **dataset project** focused on the extraction, cleanup, and curation of chemical degradation information.
 
 **Project topic:** Photocatalytic degradation of organic dyes (defined in `project.json`).
 
@@ -23,7 +22,7 @@ One **record** = one experimentally reported photocatalytic degradation efficien
 | `data/interim/` | Merged table before final cleaning |
 | `data/processed/` | Publication dataset (`dataset.csv`) |
 | `scripts/` | Reproducible extract, build, clean, validate |
-| `reports/` | Human-readable practice and final reports |
+| `reports/` | Technical and final reports |
 | `notebooks/` | Optional exploration only |
 | `tests/` | Pytest checks for required artifacts |
 

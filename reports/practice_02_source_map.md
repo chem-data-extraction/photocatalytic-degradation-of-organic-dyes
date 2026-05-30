@@ -1,4 +1,4 @@
-# Practice 2 — Source map
+# Source map
 
 ## Source search strategy
 

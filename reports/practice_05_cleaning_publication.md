@@ -1,6 +1,4 @@
-# Practice 5 — Cleaning, normalization and publication
-
-> Follow `specs/cleaning_pipeline.json`. Run `scripts/clean_dataset.py` and `scripts/validate_project.py`.
+# Cleaning, normalization and publication
 
 ## Input files
 
@@ -93,4 +91,4 @@ Walk through each step in `specs/cleaning_pipeline.json`:
 - [x] LICENSE replaced (standard license template populated)
 - [x] `CITATION.cff` completed
 - [x] `dataset_card.md` updated
-- [x] `reports/final_report.md` complete (reserved for the final overall summary submission)
+- [x] `reports/final_report.md` complete

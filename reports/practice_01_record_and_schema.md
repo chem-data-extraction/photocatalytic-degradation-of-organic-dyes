@@ -1,4 +1,4 @@
-# Practice 1 — Record definition and dataset schema
+# Record definition and dataset schema
 
 ## Topic
 

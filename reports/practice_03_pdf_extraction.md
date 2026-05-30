@@ -1,6 +1,4 @@
-# Practice 3 — PDF extraction
-
-> Align with `specs/pdf_extraction_manifest.json` and `data/extracted/pdf_extracted_records.csv`.
+# PDF extraction
 
 ## Selected PDF sources
 

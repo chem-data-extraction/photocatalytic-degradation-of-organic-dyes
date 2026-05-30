@@ -1,6 +1,4 @@
-# Practice 4 — Web extraction
-
-> Align with `specs/web_extraction_manifest.json` and `data/extracted/web_extracted_records.csv`.
+# Web extraction
 
 ## Selected web sites
 
