@@ -15,4 +15,4 @@ Store **unaltered** source files here. Do not edit files in this folder after do
 - Cleaned or merged tables (use `data/interim/` or `data/processed/`)
 - Extracted record CSVs (use `data/extracted/`)
 
-Document each file’s `source_id`, download date, and license in your source map and practice reports.
+Each file's `source_id`, download date, and license are documented in the source map and practice reports.
